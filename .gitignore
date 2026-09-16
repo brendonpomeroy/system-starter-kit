@@ -10,6 +10,8 @@ build/
 .astro/
 .expo/
 *.tsbuildinfo
+# never ignore Claude skills (e.g. .claude/skills/build/ would match build/ above)
+!.claude/skills/**
 
 # env & secrets — never commit these
 .env
