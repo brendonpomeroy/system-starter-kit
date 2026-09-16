@@ -1,0 +1,16 @@
+// apps/api/wrangler.jsonc — Hono API on Cloudflare Workers
+// Verify keys against `pnpm exec wrangler --help` and the current docs before copying;
+// wrangler's config format evolves.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "PROJECT_NAME-api",
+  "main": "src/index.ts",
+  "compatibility_date": "COMPAT_DATE",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "vars": {
+    // Non-secret config only. Secrets (SUPABASE_SERVICE_ROLE_KEY etc.) go in `wrangler secret put`.
+    "ENVIRONMENT": "production",
+    "SUPABASE_URL": "https://PROJECT_REF.supabase.co"
+  }
+}

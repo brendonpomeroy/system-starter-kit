@@ -1,0 +1,21 @@
+{
+  "$schema": "./state.schema.json",
+  "kitVersion": "1.0.0",
+  "projectName": null,
+  "steps": {
+    "setup": { "status": "pending", "startedAt": null, "completedAt": null, "artifact": null },
+    "prd": { "status": "pending", "startedAt": null, "completedAt": null, "artifact": "docs/PRD.md" },
+    "architecture": { "status": "pending", "startedAt": null, "completedAt": null, "artifact": "docs/ARCHITECTURE.md" },
+    "data-model": { "status": "pending", "startedAt": null, "completedAt": null, "artifact": "docs/DATA-MODEL.md" },
+    "design-system": { "status": "pending", "startedAt": null, "completedAt": null, "artifact": "docs/style-guide.html" },
+    "scaffold": { "status": "pending", "startedAt": null, "completedAt": null, "artifact": "apps/" }
+  },
+  "apps": {
+    "api": true,
+    "web": null,
+    "site": null,
+    "mobile": null
+  },
+  "features": [],
+  "artifactHashes": {}
+}

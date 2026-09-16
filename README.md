@@ -1,0 +1,87 @@
+# System Starter Kit
+
+A template for building a real, scalable web app with Claude Code — even if you have never written code.
+
+You describe what you want. Claude Code plans it with you, designs it with you, generates the codebase with the official tools, and keeps building feature by feature. Every step is logged, so you can stop at any time and pick up later by typing one word.
+
+## What you get
+
+| Piece | What it is | When it's built |
+|---|---|---|
+| **Supabase** | Sign-in and the database | Always |
+| **API** (Hono on Cloudflare Workers) | The server that the apps talk to | Always |
+| **Web app** (Vite + React) | The app your users log into | Almost always |
+| **Website** (Astro) | A fast, search-friendly marketing / landing site | If you need one |
+| **Mobile app** (Expo / React Native) | An iOS + Android app | Only if the web app truly can't do the job |
+| **Design system** | Your colours, type, spacing and components, plus a style guide page | Always |
+
+Everything deploys to Cloudflare Workers and lives in one GitHub repository.
+
+## The one command
+
+```
+build
+```
+
+That's it. Open Claude Code inside this folder and type `build`. It will:
+
+1. Check your computer has the tools it needs (and walk you through installing anything missing).
+2. Interview you and write a short plan (`docs/PRD.md`) — nothing is built until you approve it.
+3. Decide which of the pieces above you actually need, and explain why.
+4. Sketch the data your app stores and who is allowed to see what.
+5. Interview you about the look and feel, then build your design system and a style guide you can open in a browser.
+6. Generate the codebase using the official command-line tools.
+7. Build your app one feature at a time, checking quality, documentation and design consistency as it goes.
+
+Stop whenever you like. Next time you type `build`, it reads `docs/PROGRESS.md`, tells you where things are, and continues.
+
+## Start here
+
+1. **[Getting set up](docs/GETTING-SET-UP.md)** — install the handful of tools you need (about 30 minutes, once).
+2. **[Starting a new project](docs/STARTING-A-NEW-PROJECT.md)** — make your copy of this template and run `build`.
+3. **[Architecture explained](docs/ARCHITECTURE-EXPLAINED.md)** — what each piece does and why it's there. Optional reading, but useful when Claude asks you a question.
+
+## What's in this folder
+
+```
+.
+├── README.md                    ← you are here
+├── CLAUDE.md                    ← Claude Code's map of the project and its rules
+├── .claude/
+│   ├── state.json               ← where /build is up to (machine-readable)
+│   └── skills/                  ← the instructions Claude follows
+│       ├── build/               ← the orchestrator (the only one you run)
+│       ├── plan/                ← interview → PRD, architecture, data model
+│       ├── design-system/       ← interview → tokens, components, style guide
+│       ├── scaffold/            ← generates the apps with official CLIs
+│       ├── code-quality/        ← standards + pragmatic testing
+│       ├── documentation/       ← READMEs, ADRs, API reference
+│       ├── component-breakdown/ ← how UI is split into pieces
+│       ├── state-management/    ← how data flows through each app
+│       └── design-compliance/   ← keeps every screen on-brand
+├── docs/
+│   ├── GETTING-SET-UP.md
+│   ├── STARTING-A-NEW-PROJECT.md
+│   ├── ARCHITECTURE-EXPLAINED.md
+│   ├── PROGRESS.md              ← the human-readable log of every step
+│   └── adr/                     ← records of decisions made along the way
+└── templates/                   ← config files the scaffold step copies into place
+```
+
+After `build` has run, you'll also see `apps/` (your generated applications), `packages/` (shared code and the design system) and `supabase/` (database migrations).
+
+## Rules the kit lives by
+
+- **Generated, not hand-written.** Apps are created with the latest official CLI (`create-vite`, `create-hono`, `create-astro`, `create-expo-app`, `supabase init`). Dependencies are added with `pnpm add`, never by editing `package.json` by hand.
+- **Nothing is built before it's planned.** The PRD, architecture and data model are approved by you first.
+- **One design system.** Every screen, on every platform, is built from the same tokens and components. No one-off colours.
+- **Two environments only.** Your laptop (local) and production. Simple to reason about, cheap to run.
+- **Everything is logged.** `docs/PROGRESS.md` says what was done and when. `docs/adr/` says why.
+
+## For the technically curious
+
+pnpm workspaces + Turborepo, TypeScript strict everywhere, ESLint + Prettier, Tailwind (no component library — the design-system skill builds your own), Hono RPC client for end-to-end types, Supabase CLI for migrations, Cloudflare Workers with static assets for every deployable, GitHub Actions for deploys. See [Architecture explained](docs/ARCHITECTURE-EXPLAINED.md).
+
+## Licence
+
+MIT. Copy it, change it, give it to your own friends.

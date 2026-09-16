@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{{PROJECT_NAME}} — Style guide</title>
+<!--
+  TEMPLATE. The design-system skill copies this to docs/style-guide.html and fills every
+  {{PLACEHOLDER}} and every section marked TODO. No build step, no external requests.
+  Fonts: copy the woff2 files from node_modules/@fontsource-variable/<font>/files into
+  docs/style-guide-assets/ and reference them in the @font-face rules below.
+
+  RULE: the :root custom properties below must be the *generated* tokens.css from
+  packages/design-system/src/generated/tokens.css, pasted verbatim. Never hand-edit values here.
+-->
+<style>
+/* ===== 0. TOKENS — paste generated tokens.css here (light) ===== */
+:root {
+  --color-brand-500: {{BRAND_500}};
+  --color-brand: var(--color-brand-500);
+  --color-accent: {{ACCENT}};
+  --color-neutral-0: #ffffff;
+  --color-neutral-50: {{N50}};
+  --color-neutral-100: {{N100}};
+  --color-neutral-200: {{N200}};
+  --color-neutral-300: {{N300}};
+  --color-neutral-500: {{N500}};
+  --color-neutral-700: {{N700}};
+  --color-neutral-900: {{N900}};
+  --color-neutral-950: {{N950}};
+  --color-success: {{SUCCESS}};
+  --color-warning: {{WARNING}};
+  --color-danger: {{DANGER}};
+  --color-info: {{INFO}};
+
+  --bg-base: var(--color-neutral-0);
+  --bg-subtle: var(--color-neutral-50);
+  --bg-muted: var(--color-neutral-100);
+  --bg-inverted: var(--color-neutral-950);
+  --fg-base: var(--color-neutral-900);
+  --fg-muted: var(--color-neutral-700);
+  --fg-subtle: var(--color-neutral-500);
+  --fg-inverted: var(--color-neutral-0);
+  --fg-on-brand: #ffffff;
+  --border-base: var(--color-neutral-200);
+  --border-strong: var(--color-neutral-300);
+  --focus-ring: var(--color-brand);
+
+  --font-sans: "{{FONT_SANS}}", system-ui, sans-serif;
+  --font-mono: "{{FONT_MONO}}", ui-monospace, monospace;
+
+  --text-xs: 12px; --lh-xs: 16px;
+  --text-sm: 14px; --lh-sm: 20px;
+  --text-base: 16px; --lh-base: 24px;
+  --text-lg: 18px; --lh-lg: 28px;
+  --text-xl: 20px; --lh-xl: 28px;
+  --text-2xl: 24px; --lh-2xl: 32px;
+  --text-3xl: 30px; --lh-3xl: 36px;
+  --text-4xl: 36px; --lh-4xl: 40px;
+
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px;
+  --space-6: 24px; --space-8: 32px; --space-10: 40px; --space-12: 48px; --space-16: 64px;
+
+  --radius-sm: {{R_SM}}; --radius-md: {{R_MD}}; --radius-lg: {{R_LG}}; --radius-xl: {{R_XL}}; --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / .06);
+  --shadow-md: 0 4px 12px rgb(0 0 0 / .08);
+  --shadow-lg: 0 12px 32px rgb(0 0 0 / .12);
+
+  --motion-fast: 120ms; --motion-base: 200ms; --ease: cubic-bezier(.2,.8,.2,1);
+}
+/* ===== dark tokens (only if chosen) — paste generated dark block ===== */
+[data-theme="dark"] {
+  --bg-base: var(--color-neutral-950);
+  --bg-subtle: var(--color-neutral-900);
+  --bg-muted: var(--color-neutral-700);
+  --fg-base: var(--color-neutral-50);
+  --fg-muted: var(--color-neutral-200);
+  --fg-subtle: var(--color-neutral-300);
+  --border-base: var(--color-neutral-700);
+  --border-strong: var(--color-neutral-500);
+}
+
+/* ===== 1. FONTS (self-hosted) ===== */
+@font-face { font-family: "{{FONT_SANS}}"; src: url("style-guide-assets/{{FONT_SANS_FILE}}") format("woff2"); font-weight: 100 900; font-display: swap; }
+
+/* ===== 2. PAGE CHROME (this page only; not part of the system) ===== */
+* { box-sizing: border-box; }
+html { color-scheme: light dark; }
+body { margin: 0; font-family: var(--font-sans); font-size: var(--text-base); line-height: var(--lh-base); color: var(--fg-base); background: var(--bg-base); }
+.sg-shell { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+.sg-nav { position: sticky; top: 0; height: 100vh; overflow: auto; padding: var(--space-6); border-right: 1px solid var(--border-base); background: var(--bg-subtle); }
+.sg-nav a { display: block; padding: var(--space-1) 0; color: var(--fg-muted); text-decoration: none; font-size: var(--text-sm); }
+.sg-nav a:hover { color: var(--fg-base); }
+.sg-main { padding: var(--space-12) var(--space-16); max-width: 1100px; }
+.sg-section { margin-bottom: var(--space-16); scroll-margin-top: var(--space-6); }
+.sg-section > h2 { font-size: var(--text-2xl); line-height: var(--lh-2xl); margin: 0 0 var(--space-2); }
+.sg-section > p.lead { color: var(--fg-muted); margin: 0 0 var(--space-6); }
+.sg-grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.sg-swatch { border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-base); }
+.sg-swatch .chip { height: 56px; }
+.sg-swatch .meta { padding: var(--space-2) var(--space-3); font-size: var(--text-xs); line-height: var(--lh-xs); color: var(--fg-muted); font-family: var(--font-mono); }
+.sg-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }
+.sg-label { font-size: var(--text-xs); color: var(--fg-subtle); font-family: var(--font-mono); margin-top: var(--space-1); }
+.sg-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.sg-table th, .sg-table td { text-align: left; padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--border-base); }
+.sg-table th { color: var(--fg-subtle); font-weight: 500; }
+.sg-dodont { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+.sg-dodont > div { padding: var(--space-4); border-radius: var(--radius-lg); border: 1px solid var(--border-base); }
+.sg-dodont .do { border-top: 3px solid var(--color-success); }
+.sg-dodont .dont { border-top: 3px solid var(--color-danger); }
+.sg-screen { border: 1px solid var(--border-strong); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); background: var(--bg-base); }
+.sg-screen-web { width: 100%; aspect-ratio: 16 / 10; }
+.sg-phone { width: 390px; height: 780px; border-radius: 40px; border: 8px solid var(--color-neutral-900); overflow: hidden; background: var(--bg-base); }
+.sg-screens { display: grid; grid-template-columns: 1fr; gap: var(--space-8); }
+@media (max-width: 900px) { .sg-shell { grid-template-columns: 1fr; } .sg-nav { position: static; height: auto; } .sg-main { padding: var(--space-6) var(--space-4); } .sg-dodont { grid-template-columns: 1fr; } }
+
+/* ===== 3. THE SYSTEM — component CSS. Class names mirror the React component + variant names. ===== */
+/* Typography */
+.h1 { font-size: var(--text-4xl); line-height: var(--lh-4xl); font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+.h2 { font-size: var(--text-3xl); line-height: var(--lh-3xl); font-weight: 700; letter-spacing: -0.01em; margin: 0; }
+.h3 { font-size: var(--text-2xl); line-height: var(--lh-2xl); font-weight: 600; margin: 0; }
+.h4 { font-size: var(--text-xl); line-height: var(--lh-xl); font-weight: 600; margin: 0; }
+.text-sm { font-size: var(--text-sm); line-height: var(--lh-sm); }
+.text-xs { font-size: var(--text-xs); line-height: var(--lh-xs); }
+.muted { color: var(--fg-muted); }
+.subtle { color: var(--fg-subtle); }
+
+/* Button */
+.btn { display: inline-flex; align-items: center; gap: var(--space-2); height: 40px; padding: 0 var(--space-4); border-radius: var(--radius-md); font: inherit; font-weight: 500; font-size: var(--text-sm); border: 1px solid transparent; cursor: pointer; transition: background var(--motion-fast) var(--ease), box-shadow var(--motion-fast) var(--ease); }
+.btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--bg-base), 0 0 0 4px var(--focus-ring); }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.btn-primary { background: var(--color-brand); color: var(--fg-on-brand); }
+.btn-primary:hover { filter: brightness(.94); }
+.btn-secondary { background: var(--bg-base); color: var(--fg-base); border-color: var(--border-strong); }
+.btn-secondary:hover { background: var(--bg-subtle); }
+.btn-ghost { background: transparent; color: var(--fg-muted); }
+.btn-ghost:hover { background: var(--bg-muted); color: var(--fg-base); }
+.btn-danger { background: var(--color-danger); color: #fff; }
+.btn-sm { height: 32px; padding: 0 var(--space-3); font-size: var(--text-xs); }
+.btn-lg { height: 48px; padding: 0 var(--space-6); font-size: var(--text-base); }
+
+/* Input */
+.input { height: 40px; width: 100%; padding: 0 var(--space-3); border-radius: var(--radius-md); border: 1px solid var(--border-strong); background: var(--bg-base); color: var(--fg-base); font: inherit; font-size: var(--text-sm); }
+.input::placeholder { color: var(--fg-subtle); }
+.input:focus-visible { outline: none; border-color: var(--focus-ring); box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-ring) 25%, transparent); }
+.input[aria-invalid="true"] { border-color: var(--color-danger); }
+.input[disabled] { background: var(--bg-muted); color: var(--fg-subtle); }
+.field { display: grid; gap: var(--space-1); }
+.field label { font-size: var(--text-sm); font-weight: 500; }
+.field .help { font-size: var(--text-xs); color: var(--fg-subtle); }
+.field .error { font-size: var(--text-xs); color: var(--color-danger); }
+
+/* Card / Badge / etc. */
+.card { background: var(--bg-base); border: 1px solid var(--border-base); border-radius: var(--radius-lg); padding: var(--space-6); box-shadow: var(--shadow-sm); }
+.badge { display: inline-flex; align-items: center; height: 22px; padding: 0 var(--space-2); border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: 500; background: var(--bg-muted); color: var(--fg-muted); }
+.badge-brand { background: color-mix(in srgb, var(--color-brand) 12%, transparent); color: var(--color-brand); }
+.badge-success { background: color-mix(in srgb, var(--color-success) 14%, transparent); color: var(--color-success); }
+.badge-danger { background: color-mix(in srgb, var(--color-danger) 14%, transparent); color: var(--color-danger); }
+.avatar { width: 32px; height: 32px; border-radius: var(--radius-full); background: var(--bg-muted); display: inline-grid; place-items: center; font-size: var(--text-xs); font-weight: 600; color: var(--fg-muted); }
+.spinner { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border-base); border-top-color: var(--color-brand); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.skeleton { background: linear-gradient(90deg, var(--bg-muted), var(--bg-subtle), var(--bg-muted)); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: var(--radius-sm); height: 14px; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+.empty { text-align: center; padding: var(--space-12) var(--space-6); border: 1px dashed var(--border-strong); border-radius: var(--radius-lg); color: var(--fg-muted); }
+.toast { display: inline-flex; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--bg-inverted); color: var(--fg-inverted); font-size: var(--text-sm); box-shadow: var(--shadow-lg); }
+.dialog { width: 440px; max-width: 100%; background: var(--bg-base); border-radius: var(--radius-xl); padding: var(--space-6); box-shadow: var(--shadow-lg); border: 1px solid var(--border-base); }
+.tabs { display: flex; gap: var(--space-1); border-bottom: 1px solid var(--border-base); }
+.tab { padding: var(--space-2) var(--space-3); font-size: var(--text-sm); color: var(--fg-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tab[aria-selected="true"] { color: var(--fg-base); border-color: var(--color-brand); font-weight: 500; }
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); padding-bottom: var(--space-4); border-bottom: 1px solid var(--border-base); margin-bottom: var(--space-6); }
+.table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.table th { text-align: left; font-weight: 500; color: var(--fg-subtle); padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--border-base); }
+.table td { padding: var(--space-3); border-bottom: 1px solid var(--border-base); }
+.table tr:hover td { background: var(--bg-subtle); }
+
+/* App shell used by the mock screens */
+.app { display: grid; grid-template-columns: 220px 1fr; height: 100%; }
+.app-side { background: var(--bg-subtle); border-right: 1px solid var(--border-base); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-1); }
+.app-side a { padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); color: var(--fg-muted); font-size: var(--text-sm); text-decoration: none; }
+.app-side a.active { background: var(--bg-muted); color: var(--fg-base); font-weight: 500; }
+.app-main { padding: var(--space-8); overflow: auto; }
+.phone-top { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--space-4); font-size: var(--text-xs); font-weight: 600; }
+.phone-tabs { position: sticky; bottom: 0; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--border-base); background: var(--bg-base); padding: var(--space-2) 0 var(--space-4); }
+.phone-tabs span { text-align: center; font-size: 10px; color: var(--fg-subtle); }
+.phone-tabs span.active { color: var(--color-brand); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="sg-shell">
+  <nav class="sg-nav">
+    <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-6)">
+      <!-- TODO: inline logo svg -->
+      <strong>{{PROJECT_NAME}}</strong>
+    </div>
+    <a href="#brand">Brand</a>
+    <a href="#colour">Colour</a>
+    <a href="#type">Typography</a>
+    <a href="#space">Spacing &amp; layout</a>
+    <a href="#radius">Radii &amp; elevation</a>
+    <a href="#components">Components</a>
+    <a href="#patterns">Patterns</a>
+    <a href="#screens">Key screens</a>
+    <a href="#rules">Do / don't</a>
+    <div style="margin-top:var(--space-6)">
+      <button class="btn btn-secondary btn-sm" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? '' : 'dark'">Toggle dark</button>
+    </div>
+  </nav>
+
+  <main class="sg-main">
+    <section id="brand" class="sg-section">
+      <h1 class="h1">{{PROJECT_NAME}}</h1>
+      <p class="lead">Style guide · approved {{DATE}} · source of truth: <code>packages/design-system/src/tokens/tokens.ts</code></p>
+      <div class="card">
+        <div class="sg-row">
+          <span class="badge badge-brand">{{FEEL_1}}</span>
+          <span class="badge badge-brand">{{FEEL_2}}</span>
+          <span class="badge badge-brand">{{FEEL_3}}</span>
+        </div>
+        <p style="margin:var(--space-4) 0 0">TODO: one paragraph on the principle behind the choices — who uses it, what it needs to feel like, and the one thing every screen must get right.</p>
+      </div>
+    </section>
+
+    <section id="colour" class="sg-section">
+      <h2>Colour</h2>
+      <p class="lead">Components use the semantic aliases (bg-*, fg-*, border-*). The raw scales exist only so the aliases can be defined.</p>
+      <h3 class="h4" style="margin:var(--space-4) 0 var(--space-3)">Brand</h3>
+      <div class="sg-grid">
+        <!-- TODO: one .sg-swatch per step in the scale -->
+        <div class="sg-swatch"><div class="chip" style="background:var(--color-brand-500)"></div><div class="meta">brand-500<br>{{BRAND_500}}</div></div>
+      </div>
+      <h3 class="h4" style="margin:var(--space-6) 0 var(--space-3)">Semantic aliases</h3>
+      <table class="sg-table">
+        <tr><th>Token</th><th>Light</th><th>Dark</th><th>Used for</th></tr>
+        <tr><td><code>bg-base</code></td><td>neutral-0</td><td>neutral-950</td><td>Page and card background</td></tr>
+        <tr><td><code>fg-base</code></td><td>neutral-900</td><td>neutral-50</td><td>Body text, headings</td></tr>
+        <tr><td><code>fg-muted</code></td><td>neutral-700</td><td>neutral-200</td><td>Secondary text</td></tr>
+        <!-- TODO: complete -->
+      </table>
+      <h3 class="h4" style="margin:var(--space-6) 0 var(--space-3)">Contrast (WCAG)</h3>
+      <table class="sg-table">
+        <tr><th>Pair</th><th>Ratio</th><th>Passes</th></tr>
+        <tr><td>fg-base on bg-base</td><td>TODO</td><td>AA / AAA</td></tr>
+        <tr><td>fg-on-brand on brand</td><td>TODO</td><td></td></tr>
+      </table>
+    </section>
+
+    <section id="type" class="sg-section">
+      <h2>Typography</h2>
+      <p class="lead">{{FONT_SANS}} for everything; {{FONT_MONO}} for code and IDs.</p>
+      <div class="card" style="display:grid;gap:var(--space-4)">
+        <div><div class="h1">Heading one</div><div class="sg-label">text-4xl / 700 — page titles only</div></div>
+        <div><div class="h2">Heading two</div><div class="sg-label">text-3xl / 700 — section titles</div></div>
+        <div><div class="h3">Heading three</div><div class="sg-label">text-2xl / 600 — card titles</div></div>
+        <div><div class="h4">Heading four</div><div class="sg-label">text-xl / 600 — sub-sections, dialog titles</div></div>
+        <div><p style="margin:0;max-width:60ch">Body. TODO: replace with two sentences of real copy from this product so the owner sees their own words in their own type.</p><div class="sg-label">text-base / 400 — body</div></div>
+        <div><p class="text-sm muted" style="margin:0">Small muted text for metadata and helper copy.</p><div class="sg-label">text-sm / fg-muted</div></div>
+      </div>
+    </section>
+
+    <section id="space" class="sg-section">
+      <h2>Spacing &amp; layout</h2>
+      <p class="lead">4px grid. Related things sit 2–3 apart, groups 4–6 apart, sections 8–12 apart.</p>
+      <div style="display:grid;gap:var(--space-2)">
+        <!-- TODO: one bar per step -->
+        <div class="sg-row"><div style="width:var(--space-4);height:16px;background:var(--color-brand)"></div><span class="sg-label">space-4 · 16px</span></div>
+        <div class="sg-row"><div style="width:var(--space-8);height:16px;background:var(--color-brand)"></div><span class="sg-label">space-8 · 32px</span></div>
+      </div>
+      <p class="text-sm muted">Container max-width: TODO px · Page gutter: space-8 desktop, space-4 mobile · Sidebar: 220px.</p>
+    </section>
+
+    <section id="radius" class="sg-section">
+      <h2>Radii &amp; elevation</h2>
+      <div class="sg-row">
+        <div class="card" style="border-radius:var(--radius-sm);padding:var(--space-4)">sm<div class="sg-label">{{R_SM}}</div></div>
+        <div class="card" style="border-radius:var(--radius-md);padding:var(--space-4)">md<div class="sg-label">{{R_MD}} · inputs, buttons</div></div>
+        <div class="card" style="border-radius:var(--radius-lg);padding:var(--space-4)">lg<div class="sg-label">{{R_LG}} · cards</div></div>
+        <div class="card" style="border-radius:var(--radius-xl);padding:var(--space-4)">xl<div class="sg-label">{{R_XL}} · dialogs</div></div>
+      </div>
+      <div class="sg-row" style="margin-top:var(--space-6)">
+        <div class="card" style="box-shadow:var(--shadow-sm)">shadow-sm<div class="sg-label">cards at rest</div></div>
+        <div class="card" style="box-shadow:var(--shadow-md)">shadow-md<div class="sg-label">popovers, hover</div></div>
+        <div class="card" style="box-shadow:var(--shadow-lg)">shadow-lg<div class="sg-label">dialogs, toasts</div></div>
+      </div>
+    </section>
+
+    <section id="components" class="sg-section">
+      <h2>Components</h2>
+      <p class="lead">Class names here mirror the React component and variant names. Every state shown.</p>
+
+      <h3 class="h4" style="margin:var(--space-4) 0 var(--space-3)">Button</h3>
+      <div class="sg-row">
+        <button class="btn btn-primary">Primary</button>
+        <button class="btn btn-secondary">Secondary</button>
+        <button class="btn btn-ghost">Ghost</button>
+        <button class="btn btn-danger">Danger</button>
+        <button class="btn btn-primary" disabled>Disabled</button>
+        <button class="btn btn-primary"><span class="spinner" style="width:14px;height:14px;border-width:2px;border-top-color:#fff"></span> Loading</button>
+        <button class="btn btn-primary btn-sm">Small</button>
+        <button class="btn btn-primary btn-lg">Large</button>
+      </div>
+      <pre class="text-xs muted" style="margin-top:var(--space-3)">&lt;Button variant="primary" size="md" loading&gt;Save&lt;/Button&gt;</pre>
+
+      <h3 class="h4" style="margin:var(--space-6) 0 var(--space-3)">Input &amp; FormField</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--space-4);max-width:760px">
+        <div class="field"><label>Email</label><input class="input" placeholder="you@example.com" /><span class="help">We'll never share it.</span></div>
+        <div class="field"><label>Email</label><input class="input" aria-invalid="true" value="not-an-email" /><span class="error">Enter a valid email address.</span></div>
+        <div class="field"><label>Email</label><input class="input" disabled value="locked@example.com" /></div>
+      </div>
+
+      <h3 class="h4" style="margin:var(--space-6) 0 var(--space-3)">Badge · Avatar · Spinner · Skeleton</h3>
+      <div class="sg-row">
+        <span class="badge">Default</span><span class="badge badge-brand">Brand</span><span class="badge badge-success">Active</span><span class="badge badge-danger">Overdue</span>
+        <span class="avatar">BP</span><span class="spinner"></span>
+        <div style="width:160px;display:grid;gap:6px"><div class="skeleton"></div><div class="skeleton" style="width:70%"></div></div>
+      </div>
+
+      <h3 class="h4" style="margin:var(--space-6) 0 var(--space-3)">Tabs · Card · Dialog · Toast</h3>
+      <div class="tabs"><span class="tab" aria-selected="true">Overview</span><span class="tab">Activity</span><span class="tab">Settings</span></div>
+      <div class="sg-row" style="margin-top:var(--space-4);align-items:flex-start">
+        <div class="card" style="width:280px"><div class="h4">Card title</div><p class="text-sm muted" style="margin:var(--space-2) 0 0">Supporting copy in muted text.</p></div>
+        <div class="dialog"><div class="h4">Delete project?</div><p class="text-sm muted" style="margin:var(--space-2) 0 var(--space-4)">This can't be undone.</p><div class="sg-row" style="justify-content:flex-end"><button class="btn btn-secondary">Cancel</button><button class="btn btn-danger">Delete</button></div></div>
+        <div class="toast">✓ Saved</div>
+      </div>
+      <!-- TODO: Select, Checkbox, Switch, Textarea, Tooltip, Sheet, Table, Link, IconButton -->
+    </section>
+
+    <section id="patterns" class="sg-section">
+      <h2>Patterns</h2>
+      <p class="lead">Composed pieces the feature loop reuses. Build these once in <code>packages/design-system</code> or the app's <code>components/composed</code>.</p>
+      <div class="page-header"><div><div class="h2">Projects</div><div class="text-sm muted">12 active</div></div><button class="btn btn-primary">New project</button></div>
+      <table class="table"><tr><th>Name</th><th>Owner</th><th>Status</th><th></th></tr><tr><td>Website refresh</td><td><span class="avatar" style="width:24px;height:24px">BP</span></td><td><span class="badge badge-success">Active</span></td><td class="text-sm muted">Edited 2h ago</td></tr></table>
+      <div class="empty" style="margin-top:var(--space-6)"><div class="h4">No projects yet</div><p class="text-sm" style="margin:var(--space-2) 0 var(--space-4)">Create your first project to get started.</p><button class="btn btn-primary">New project</button></div>
+      <!-- TODO: form layout, loading state, error state -->
+    </section>
+
+    <section id="screens" class="sg-section">
+      <h2>Key screens</h2>
+      <p class="lead">Static mocks of the screens from the PRD's core flows. The feature loop builds to match these.</p>
+      <div class="sg-screens">
+        <div>
+          <div class="h4" style="margin-bottom:var(--space-3)">1. Sign in — web</div>
+          <div class="sg-screen sg-screen-web" style="display:grid;place-items:center">
+            <div class="card" style="width:360px;display:grid;gap:var(--space-4)">
+              <div class="h3">Sign in to {{PROJECT_NAME}}</div>
+              <div class="field"><label>Email</label><input class="input" placeholder="you@example.com" /></div>
+              <div class="field"><label>Password</label><input class="input" type="password" /></div>
+              <button class="btn btn-primary">Sign in</button>
+              <p class="text-sm muted" style="margin:0;text-align:center">Forgot password?</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="h4" style="margin-bottom:var(--space-3)">2. Main screen — web</div>
+          <div class="sg-screen sg-screen-web">
+            <div class="app">
+              <div class="app-side"><strong style="padding:var(--space-2) var(--space-3);margin-bottom:var(--space-2)">{{PROJECT_NAME}}</strong><a class="active">Projects</a><a>Team</a><a>Settings</a></div>
+              <div class="app-main">
+                <div class="page-header"><div><div class="h2">Projects</div><div class="text-sm muted">12 active</div></div><button class="btn btn-primary">New project</button></div>
+                <table class="table"><tr><th>Name</th><th>Status</th><th></th></tr><tr><td>TODO real example</td><td><span class="badge badge-success">Active</span></td><td class="text-sm muted">2h ago</td></tr><tr><td>TODO real example</td><td><span class="badge">Draft</span></td><td class="text-sm muted">Yesterday</td></tr></table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- TODO: 3. primary create/edit flow (web). 4–5: only if mobile chosen, in .sg-phone frames. If site chosen: landing hero. -->
+        <div>
+          <div class="h4" style="margin-bottom:var(--space-3)">Main screen — mobile (only if apps/mobile)</div>
+          <div class="sg-phone" style="display:flex;flex-direction:column">
+            <div class="phone-top"><span>9:41</span><span>●●●</span></div>
+            <div style="padding:var(--space-4);flex:1"><div class="h3">Projects</div><div class="card" style="margin-top:var(--space-4);padding:var(--space-4)"><div style="font-weight:500">TODO real example</div><div class="text-xs muted">Active · 2h ago</div></div></div>
+            <div class="phone-tabs"><span class="active">Projects</span><span>Team</span><span>Inbox</span><span>Me</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="rules" class="sg-section">
+      <h2>Do / don't</h2>
+      <div class="sg-dodont">
+        <div class="do"><strong>Do</strong> use one primary button per screen area.</div>
+        <div class="dont"><strong>Don't</strong> use brand colour for body text.</div>
+        <div class="do"><strong>Do</strong> show empty, loading and error states for every list.</div>
+        <div class="dont"><strong>Don't</strong> invent a spacing value; pick from the scale.</div>
+        <!-- TODO: 6–10 rules specific to this brand -->
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

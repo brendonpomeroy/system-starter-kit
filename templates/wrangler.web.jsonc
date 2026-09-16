@@ -1,0 +1,11 @@
+// apps/web/wrangler.jsonc — Vite + React app served as static assets from a Worker
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "PROJECT_NAME-web",
+  "compatibility_date": "COMPAT_DATE",
+  "assets": {
+    "directory": "./dist",
+    // SPA: unknown paths fall back to index.html so client-side routing works
+    "not_found_handling": "single-page-application"
+  }
+}

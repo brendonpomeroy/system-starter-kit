@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "System Starter Kit build state",
+  "type": "object",
+  "required": ["kitVersion", "steps", "apps", "features", "artifactHashes"],
+  "properties": {
+    "kitVersion": { "type": "string" },
+    "projectName": { "type": ["string", "null"] },
+    "steps": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["status", "startedAt", "completedAt", "artifact"],
+        "properties": {
+          "status": { "enum": ["pending", "started", "completed", "stale"] },
+          "startedAt": { "type": ["string", "null"], "format": "date-time" },
+          "completedAt": { "type": ["string", "null"], "format": "date-time" },
+          "artifact": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "apps": {
+      "type": "object",
+      "properties": {
+        "api": { "type": "boolean" },
+        "web": { "type": ["boolean", "null"] },
+        "site": { "type": ["boolean", "null"] },
+        "mobile": { "type": ["boolean", "null"] }
+      }
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "status", "startedAt"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^F[0-9]{3}$" },
+          "title": { "type": "string" },
+          "status": { "enum": ["started", "completed", "abandoned"] },
+          "startedAt": { "type": "string", "format": "date-time" },
+          "completedAt": { "type": ["string", "null"], "format": "date-time" },
+          "stage": { "enum": ["breakdown", "state", "build", "quality", "compliance", "docs", "done", null] },
+          "apps": { "type": "array", "items": { "enum": ["api", "web", "site", "mobile"] } }
+        }
+      }
+    },
+    "artifactHashes": {
+      "type": "object",
+      "description": "sha256 of each approved artifact at approval time, used to detect upstream edits",
+      "additionalProperties": { "type": "string" }
+    }
+  }
+}

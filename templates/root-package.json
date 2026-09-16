@@ -1,0 +1,20 @@
+{
+  "name": "PROJECT_NAME",
+  "private": true,
+  "packageManager": "pnpm@PNPM_VERSION",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:migration": "supabase migration new",
+    "db:push": "supabase db push",
+    "db:types": "supabase gen types typescript --local > packages/api-types/src/database.types.ts"
+  }
+}

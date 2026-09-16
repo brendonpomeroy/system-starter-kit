@@ -1,0 +1,11 @@
+// apps/site/wrangler.jsonc — Astro static site served from a Worker
+// If the Astro CLI's Cloudflare adapter generates its own wrangler config, prefer that and merge the name.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "PROJECT_NAME-site",
+  "compatibility_date": "COMPAT_DATE",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page"
+  }
+}

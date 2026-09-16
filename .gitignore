@@ -1,0 +1,29 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# builds
+dist/
+build/
+.turbo/
+.wrangler/
+.astro/
+.expo/
+*.tsbuildinfo
+
+# env & secrets — never commit these
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+
+# supabase local
+supabase/.branches/
+supabase/.temp/
+
+# tooling
+coverage/
+playwright-report/
+test-results/
+.DS_Store
