@@ -58,7 +58,8 @@ Stop whenever you like. Next time you type `build`, it reads `docs/PROGRESS.md`,
 │       ├── documentation/       ← READMEs, ADRs, API reference
 │       ├── component-breakdown/ ← how UI is split into pieces
 │       ├── state-management/    ← how data flows through each app
-│       └── design-compliance/   ← keeps every screen on-brand
+│       ├── design-compliance/   ← keeps every screen on-brand
+│       └── pwa/                 ← makes the web app installable and self-updating
 ├── docs/
 │   ├── GETTING-SET-UP.md
 │   ├── STARTING-A-NEW-PROJECT.md

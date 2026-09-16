@@ -14,7 +14,8 @@
     "api": true,
     "web": null,
     "site": null,
-    "mobile": null
+    "mobile": null,
+    "pwa": null
   },
   "features": [],
   "artifactHashes": {}

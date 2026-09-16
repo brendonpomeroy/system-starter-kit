@@ -41,7 +41,7 @@ Project: <name or "not named yet">
 Done:    setup, PRD, architecture
 Now:     data model (started yesterday, not yet approved)
 Next:    design system → scaffold → first feature
-Apps:    api ✓  web ✓  site ✗  mobile ✗ (decided in ARCHITECTURE.md)
+Apps:    api ✓  web ✓ (installable)  site ✗  mobile ✗ (decided in ARCHITECTURE.md)
 ```
 
 If the owner asked for something specific ("add a login page", "change the colours"), map it to a step or a feature and say which one you'll run. If they asked for something that belongs to a completed fixed step (e.g. "change the colours" → design-system), that's a **redo**, which needs an explicit yes and marks downstream steps `stale`.
@@ -96,6 +96,8 @@ Stages, in order, each loading its skill and logging its start and finish:
 When a feature reaches `done`, run the app locally, tell the owner exactly what to click to see it, and ask whether to deploy (`pnpm exec wrangler deploy` per app, or push to `main` if Actions are configured) before starting the next feature. Commit at `done` with `feat(F00N): <title>`.
 
 Where do features come from? First from `docs/PRD.md` → "Core flows", in order. The first feature is always **auth + an empty authenticated shell** because everything else sits on it. When the PRD's flows are exhausted, ask the owner what's next, and append it to the PRD under "Added later".
+
+If the owner asks to make an existing web app installable ("can people put it on their home screen?"), that's a feature, not a redo of `architecture`: update ARCHITECTURE.md's PWA row and `state.apps.pwa`, then run the feature with `.claude/skills/pwa/SKILL.md` as the `build` stage's plan.
 
 If the owner interrupts mid-feature, the feature stays `started` at its current `stage`; next run resumes from that stage.
 

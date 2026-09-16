@@ -25,6 +25,9 @@ rg -n '<(button|input|select|textarea)\b' apps/web/src apps/site/src
 rg -n '<(TouchableOpacity|Pressable|TextInput)\b' apps/mobile/src apps/mobile/app   # should be wrapped by native primitives
 # fonts loaded at runtime
 rg -n 'fonts.googleapis|fonts.gstatic' apps
+# zoom blocked instead of fixed; broken mobile viewport height
+rg -n 'maximum-scale|user-scalable' apps/*/index.html apps/*/src
+rg -n '\b(min-)?h-screen\b|100vh' apps/web/src apps/site/src         # use h-dvh / min-h-dvh
 ```
 
 Any hit: fix by using a token or a primitive. If the *token doesn't exist*, that's a design-system change — add it via the design-system skill (token + style guide + generated outputs together), never a local exception. The only sanctioned exception is a third-party embed you don't control; wrap it and note it in PROGRESS.
@@ -66,6 +69,8 @@ Open the screen locally next to the style guide. For each new or changed screen 
 
 **Responsive**
 - Web: checked at 375 px, 768 px, 1280 px. No horizontal scroll, no overlapping, tables collapse or scroll within a container.
+- Web on iPhone (Simulator or device): focusing every input/select/textarea on the screen does **not** zoom the page.
+- Installable web app (ARCHITECTURE.md PWA: Yes): opened from the home screen, content clears the notch and home indicator (safe-area utilities), non-root screens have an in-app back action, and the update toast still works (pwa skill §9 update test) if the shell or routing changed.
 - Mobile: safe areas respected; tap targets ≥ 44 pt; keyboard doesn't cover the focused input.
 - Site: Lighthouse-style basics — text readable without zoom, images sized.
 

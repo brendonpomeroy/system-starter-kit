@@ -96,9 +96,13 @@ Read the approved PRD. Decide which apps to generate. Justify each in plain lang
 | `site` (Astro) | PRD says "MVP for external users" AND there's a need for a public landing/marketing/SEO page; or the owner has an existing marketing site to replace | internal tool; or a single landing page can live as a public route in `web` for now |
 | `mobile` (Expo) | **only** if the PRD names a specific native need: camera/scanning as a core flow, push notifications that must be reliable, offline-first, background location, Bluetooth/NFC, or App Store presence is a hard business requirement | "it needs to work on phones" — that's responsive web; "it would be nice as an app" — that's a PWA later |
 
+| installable (PWA) — not an app, a mode of `web` | `web` is generated AND users will open it on phones regularly (field staff, customers on the go, anything they'd want "an app" for) | desktop-only internal tool; or the web app is used rarely (once a month) |
+
 **The mobile gate.** If the PRD's mobile need is anything but a named native capability, write the decision as "responsive web app; PWA install prompt; revisit mobile when <specific trigger>". Explain the cost honestly: a native app roughly doubles UI work, adds App Store review cycles measured in days, needs Apple Developer ($99/yr) and Google Play ($25) accounts, and every release is slower. If the native need is real, generate it — but say the first feature slices will be web-first with mobile catching up, unless mobile *is* the product.
 
 Also decide and record: auth method (Supabase email+password by default; magic link if users are non-technical and low-frequency; OAuth providers only if the PRD names them), roles (none / single admin flag / role table — pick the simplest that satisfies the PRD), and whether the API is the only path to the DB (**yes by default**: web and mobile use Supabase only for auth and call the Hono API for data; direct Supabase queries from the client are allowed only for read-heavy, RLS-protected, per-user data and must be recorded as an ADR).
+
+If the web app is installable, don't pick magic link or OAuth-only sign-in without flagging this: on iPhone an installed web app has separate storage from Safari, so a link opened from email signs the user in to Safari, not the app. Prefer email + password or email one-time codes (see `.claude/skills/pwa/SKILL.md` → Auth gotcha).
 
 ### Document template
 
@@ -115,6 +119,7 @@ _Approved: <date>_
 | Web app — Vite + React | Yes/No | … |
 | Website — Astro | Yes/No | … |
 | Mobile app — Expo | Yes/No | … (state the gate outcome explicitly) |
+| Installable on phones (PWA) | Yes/No | … (only if web app is Yes) |
 
 ## How the pieces talk to each other
 <one paragraph, then an ASCII diagram: browser/phone → web → api → supabase; site standalone>
@@ -137,7 +142,7 @@ Push to `main` → GitHub Actions → migrations, then Workers deploy. Mobile: E
 - Consider splitting the API when: …
 ```
 
-Update `.claude/state.json → apps` to match. Approval question: **"Happy with which pieces we're building and why?"**
+Update `.claude/state.json → apps` to match (including `pwa`). Approval question: **"Happy with which pieces we're building and why?"**
 
 ---
 

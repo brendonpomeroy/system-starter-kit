@@ -61,6 +61,7 @@ templates/         files the scaffold step copies; do not edit after scaffolding
 | code-quality | `.claude/skills/code-quality/SKILL.md` | build (feature loop) |
 | design-compliance | `.claude/skills/design-compliance/SKILL.md` | build (feature loop) |
 | documentation | `.claude/skills/documentation/SKILL.md` | build (feature loop + after scaffold) |
+| pwa (helper) | `.claude/skills/pwa/SKILL.md` | scaffold (if installable) · build (feature "make it installable") |
 
 ## Commands (after scaffolding)
 

@@ -97,6 +97,10 @@ Then:
 - `.env.local` from the template's web section. `.env.example` committed.
 - Prove it: `pnpm --filter web dev` → sign-in page renders with the right fonts and colours.
 
+## 4b. Installable web app (if ARCHITECTURE.md says PWA: Yes)
+
+Load `.claude/skills/pwa/SKILL.md` and work through it for `apps/web`. Do this now, before the first deploy, so the very first installed copy already has the update prompt. The on-phone checks in its §9 happen after section 8 below, once there's a live URL.
+
 ## 5. Website — `apps/site` (if chosen)
 
 ```bash
@@ -105,7 +109,7 @@ pnpm --filter site exec astro add tailwind
 pnpm --filter site exec astro add cloudflare   # check: current adapter may generate wrangler config itself
 ```
 
-Wire the design-system preset into the Tailwind config; import `tokens.css` in the base layout. Copy `templates/wrangler.site.jsonc` only if the adapter didn't create one; otherwise merge the `name`. Build the landing hero from the style guide. `.env` from the site section. Prove: `pnpm --filter site dev`.
+Wire the design-system preset into the Tailwind config; import `tokens.css` in the base layout. Copy `templates/wrangler.site.jsonc` only if the adapter didn't create one; otherwise merge the `name`. Build the landing hero from the style guide. Favicons + apple-touch-icon from the design-system icon (pwa skill §2, icons only; no service worker on the site). `.env` from the site section. Prove: `pnpm --filter site dev`.
 
 ## 6. Mobile — `apps/mobile` (only if ARCHITECTURE.md passed the gate)
 

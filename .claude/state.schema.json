@@ -25,7 +25,8 @@
         "api": { "type": "boolean" },
         "web": { "type": ["boolean", "null"] },
         "site": { "type": ["boolean", "null"] },
-        "mobile": { "type": ["boolean", "null"] }
+        "mobile": { "type": ["boolean", "null"] },
+        "pwa": { "type": ["boolean", "null"], "description": "web app is installable (not a separate app)" }
       }
     },
     "features": {
