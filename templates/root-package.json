@@ -14,7 +14,6 @@
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "db:migration": "supabase migration new",
-    "db:push": "supabase db push",
     "db:types": "supabase gen types typescript --local > packages/api-types/src/database.types.ts"
   }
 }

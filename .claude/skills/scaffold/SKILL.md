@@ -1,11 +1,13 @@
 ---
 name: scaffold
-description: Generate the monorepo and every chosen app with the latest official CLIs (pnpm, Turborepo, create-hono, create-vite, create-astro, create-expo-app, supabase init, wrangler), wire in the design system, write the first migration from DATA-MODEL.md, set up GitHub Actions and Cloudflare, and prove everything runs locally. Called by /build for step 6.
+description: Generate the monorepo and every chosen app with the official CLIs (pnpm, Turborepo, create-hono, create-vite, create-astro, create-expo-app, supabase init, wrangler), wire in the design system, write the first migration from DATA-MODEL.md, set up GitHub Actions and Cloudflare, and prove everything runs locally. Called by /build for step 6.
 ---
 
 # scaffold — generate the codebase
 
 Nothing here is typed from memory. Every skeleton comes from a CLI, every dependency from `pnpm add`, every config template from `templates/` **after** checking what the CLI already produced. Before each CLI, run it with `--help` so you use its *current* flags — do not trust remembered ones.
+
+**Versions:** load `.claude/skills/choosing-versions/SKILL.md` before section 1 and apply it throughout. Generators run at `@latest` (the stable channel), but after each one, check what it installed against the anchor pairs in that skill, and settle on the newest *stable, mutually supported* versions — not simply the newest. A version conflict is normally a decide-and-tell (`.claude/skills/explain-decisions/SKILL.md`); record every choice in the ADR's Versions table.
 
 Work through the sections in order. Log each section's completion in `docs/PROGRESS.md` as a sub-entry of the `scaffold` step so an interrupted run resumes at the right section. Read `docs/ARCHITECTURE.md` for which apps to build and `.claude/state.json → apps`.
 
@@ -14,12 +16,12 @@ Project name: kebab-case from PRD title; used as `PROJECT_NAME` in templates and
 ## 1. Monorepo root
 
 ```bash
-corepack enable && corepack prepare pnpm@latest --activate   # or verify pnpm --version
+corepack enable && corepack prepare pnpm@latest --activate   # or verify pnpm --version (pnpm's `latest` tag is its stable release)
 pnpm init                                                    # only if no package.json yet
 cp templates/pnpm-workspace.yaml ./
 cp templates/turbo.json ./
 cp templates/nvmrc .nvmrc
-pnpm add -D -w turbo typescript prettier prettier-plugin-tailwindcss
+pnpm add -D -w turbo typescript prettier prettier-plugin-tailwindcss   # check typescript against typescript-eslint's peer range first; pin the major (e.g. typescript@^6) if needed
 ```
 
 Merge `templates/root-package.json` scripts into the root `package.json` (keep whatever `pnpm init` wrote; set `packageManager` to the real pnpm version). Create `packages/config` (`pnpm init` inside it, name `@<project>/config`), copy `tsconfig.base.json`, `eslint.config.mjs`, `prettier.config.mjs` there, and install the ESLint plugins listed at the top of the eslint template. Root `prettier.config.mjs` re-exports the config one.
@@ -50,7 +52,7 @@ pnpm create hono@latest apps/api    # choose the cloudflare-workers template, pn
 
 Then:
 
-- `pnpm --filter api add @supabase/supabase-js zod @hono/zod-validator` and `pnpm --filter api add -D wrangler vitest @cloudflare/vitest-pool-workers` (check each package still exists and is the current recommendation with `npm view <pkg>`).
+- `pnpm --filter api add @supabase/supabase-js zod @hono/zod-validator` and `pnpm --filter api add -D wrangler vitest @cloudflare/vitest-pool-workers` (check each package still exists and is the current recommendation with `npm view <pkg>`, and that the versions agree per `choosing-versions`).
 - Replace the CLI's `wrangler.*` with `templates/wrangler.api.jsonc` **merged** with anything the CLI set (keep its `main`, take our `name`, `compatibility_flags`, `vars`). Set `compatibility_date` to today.
 - Structure:
 
@@ -113,7 +115,7 @@ Wire the design-system preset into the Tailwind config; import `tokens.css` in t
 
 ## 6. Mobile — `apps/mobile` (only if ARCHITECTURE.md passed the gate)
 
-First check tooling the setup step skipped: `xcode-select -p` (macOS, iOS), Android Studio + `adb`, `pnpm dlx eas-cli --version`, Expo account (`eas login`). Missing → `docs/GETTING-SET-UP.md → Mobile` and wait.
+First check tooling the setup step skipped: `xcode-select -p` (macOS, iOS), Android Studio + `adb`, `pnpm dlx eas-cli --version`, Expo account (`eas login`). Missing → `docs/GETTING-SET-UP.md → Mobile`, with the steps inline per `guide-owner` (Expo signup link; Apple/Google accounts only when releasing), and wait.
 
 ```bash
 pnpm create expo-app@latest apps/mobile   # choose the Expo Router (tabs) TypeScript template
@@ -133,21 +135,28 @@ Should already exist from step 5 of `/build`. Verify it builds (`pnpm --filter d
 ## 8. GitHub + Cloudflare
 
 - `git init` if needed, `.gitignore` present, initial commit `chore(scaffold): generate monorepo`.
-- `gh repo create <project> --private --source . --push` (ask the owner: private or public, and confirm the GitHub account from `gh auth status`).
-- Copy `templates/github-workflows/ci.yml` and `deploy.yml` to `.github/workflows/`; delete the `deploy-site` job if no site; mobile is never deployed from Actions.
-- Cloudflare: `wrangler whoami` for account id. For each app: `pnpm --filter <app> exec wrangler deploy` once, manually, so the Workers exist and the owner sees a live URL. Then `wrangler secret put SUPABASE_SERVICE_ROLE_KEY` etc. for the api, using the **hosted** Supabase project's values.
-- Hosted Supabase: the owner creates the project in the dashboard (walk them through it); `supabase link --project-ref …`; `supabase db push`; set the hosted project's auth `site_url` to the web Worker URL.
-- GitHub secrets: list every name from the comment at the top of `deploy.yml`; set them with `gh secret set NAME` one at a time, asking the owner to paste each value (never echo secrets back).
+Everything in this section that the owner does in a browser follows `.claude/skills/guide-owner/SKILL.md` — one task at a time, direct links with their real ids, exact button labels, verified from the terminal afterwards.
+
+- `gh repo create <project> --private --source . --push` (ask the owner: private or public — recommend private — and confirm the GitHub account from `gh auth status`).
+- Copy `templates/github-workflows/ci.yml` and `deploy.yml` to `.github/workflows/`; delete the `deploy-site` job if no site; mobile is never deployed from Actions. `deploy.yml` doesn't run migrations — it waits for the Supabase GitHub integration's check (below) before deploying Workers.
+- Cloudflare: `wrangler whoami` for account id. For each app: `pnpm --filter <app> exec wrangler deploy` once, manually, so the Workers exist and the owner sees a live URL. Then the api's Worker secrets (`wrangler secret put SUPABASE_SERVICE_ROLE_KEY` etc.) using the **hosted** Supabase project's values — the owner runs these in their own terminal (guide-owner §2); confirm with `wrangler secret list`.
+- Hosted Supabase: the owner creates the project in the dashboard (guide-owner: new-project link, which organisation, project name, a generated database password saved in their password manager *before* clicking create, region nearest their users, free plan). Then `supabase link --project-ref …` (for type generation and advisors — **not** for pushing migrations). Set the hosted project's auth `site_url` and redirect URLs to the web Worker URL in the dashboard: the integration does not deploy auth settings from `config.toml`.
+- **Supabase ↔ GitHub (the default way migrations reach production).** Guide the owner through connecting it: Project Settings → Integrations (`https://supabase.com/dashboard/project/<ref>/settings/integrations`) → **Authorize GitHub** → choose the repo → **Working directory** `.` (the folder that contains `supabase/`) → production branch `main` → **Deploy to production** on → **Automatic branching** off (preview databases are a paid feature and would be a staging environment, which the kit doesn't use) → **Enable integration**. Check the current docs for the labels first (`https://supabase.com/docs/guides/deployment/branching/github-integration`). From then on, a push to `main` applies new migration files (and storage buckets declared in `config.toml`); seed data never reaches production. Verify after the first push: the commit shows a Supabase check (`gh api repos/<owner>/<repo>/commits/<sha>/check-runs` and `/status`), and `supabase migration list --linked` shows local and remote in step. Tighten the check-name filter in `deploy.yml`'s `wait-for-supabase` job to the real name you see. If the integration truly can't be connected (e.g. an organisation policy blocks the GitHub app), use the commented CLI `migrate` job in `deploy.yml` instead and record why in an ADR.
+- GitHub secrets: list every name from the comment at the top of `deploy.yml`; for each, send the owner to the exact page that shows the value (guide-owner §4 links) and have them run `gh secret set NAME` **in their own terminal window** so the value never enters the chat. Non-secret values (project ref, account id, URLs) you can set yourself. Confirm with `gh secret list`.
 - Push to `main`, watch `gh run watch`, confirm green.
 
-## 9. Documentation and hand-off
+## 9. Verification (full)
 
-Load `.claude/skills/documentation/SKILL.md` and produce: root `README.md` (replace the template's — the project's own, with the live URLs), per-app READMEs, `docs/api.md`, and update `CLAUDE.md` if any path differs from the kit default. ADR `0001-scaffold.md` recording every CLI version used and any place a template was adapted.
+Load `.claude/skills/verification/SKILL.md` in **full** mode. Scaffold is where sign-in, the first tables and their RLS policies are created, so prove them now: route inventory, auth flows on the sign-in screen, the first version of the authorisation matrix test (`authz.matrix.test.ts`) with the seeded users, RLS checked directly, design system in sync. Fix every critical and high before the approval question. Set `state.verification`.
 
-Tell the owner, in plain words: the three URLs (api, web, site), how to run locally (`pnpm dev` + `supabase start`), and that the next `build` starts feature F001 (auth end-to-end).
+## 10. Documentation and hand-off
+
+Load `.claude/skills/documentation/SKILL.md` and produce: root `README.md` (replace the template's — the project's own, with the live URLs), per-app READMEs, `docs/api.md`, and update `CLAUDE.md` if any path differs from the kit default. ADR `0001-scaffold.md` recording every CLI version used, a **Versions** table of key packages (with the reason and revisit condition for anything held back from its newest major), and any place a template was adapted. Confirm `pnpm install` shows no unmet peer-dependency warnings.
+
+Tell the owner, in plain words: the verification summary, the three URLs (api, web, site), how to run locally (`pnpm dev` + `supabase start`), and that the next `build` starts feature F001 (auth end-to-end).
 
 Approval question from `/build`: **"Everything runs on your machine. Ready to start building features?"**
 
 ## When a CLI has changed
 
-If a CLI's prompts or output differ from what this file describes, follow the CLI — it is the source of truth — and note the difference in `docs/adr/0001-scaffold.md` and in PROGRESS so the kit author can update the template. Never fight the CLI's structure; adapt ours.
+If a CLI's prompts or output differ from what this file describes, follow the CLI — it is the source of truth for *structure* (not for versions: if it pulls in a major its companions don't support, apply `choosing-versions`) — and note the difference in `docs/adr/0001-scaffold.md` and in PROGRESS so the kit author can update the template. Never fight the CLI's structure; adapt ours.

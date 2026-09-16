@@ -93,4 +93,4 @@ New tokens needed: none
 Follow-ups: none
 ```
 
-Then `/build` moves to `docs`.
+Then `/build` moves to `verify`.

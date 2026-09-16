@@ -40,8 +40,46 @@
           "status": { "enum": ["started", "completed", "abandoned"] },
           "startedAt": { "type": "string", "format": "date-time" },
           "completedAt": { "type": ["string", "null"], "format": "date-time" },
-          "stage": { "enum": ["breakdown", "state", "build", "quality", "compliance", "docs", "done", null] },
+          "stage": { "enum": ["breakdown", "state", "build", "quality", "compliance", "verify", "docs", "done", null] },
           "apps": { "type": "array", "items": { "enum": ["api", "web", "site", "mobile"] } }
+        }
+      }
+    },
+    "bugs": {
+      "type": "array",
+      "description": "bugs investigated by the debugging skill; docs/bugs/B00N-<slug>.md is the notebook",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "status", "startedAt"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^B[0-9]{3}$" },
+          "title": { "type": "string" },
+          "status": { "enum": ["started", "completed", "not-a-bug", "wont-fix"] },
+          "severity": { "enum": ["critical", "high", "medium", "low", null] },
+          "startedAt": { "type": "string", "format": "date-time" },
+          "completedAt": { "type": ["string", "null"], "format": "date-time" },
+          "stage": { "enum": ["intake", "reproduce", "diagnose", "waiting-for-evidence", "fix", "verify", "done", null] },
+          "where": { "type": "array", "items": { "enum": ["api", "web", "site", "mobile", "database", "local", "production"] } },
+          "rootCause": { "type": ["string", "null"], "description": "one line, filled in once proven" },
+          "notebook": { "type": ["string", "null"], "description": "path under docs/bugs/" }
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "description": "results of the verification skill; the build deploy gate reads openFindings",
+      "properties": {
+        "lastFull": { "type": ["string", "null"], "format": "date-time" },
+        "lastReport": { "type": ["string", "null"], "description": "path under docs/verification/" },
+        "featuresSinceFull": { "type": "integer", "minimum": 0 },
+        "openFindings": {
+          "type": "object",
+          "properties": {
+            "critical": { "type": "integer", "minimum": 0 },
+            "high": { "type": "integer", "minimum": 0 },
+            "medium": { "type": "integer", "minimum": 0 },
+            "low": { "type": "integer", "minimum": 0 }
+          }
         }
       }
     },

@@ -20,7 +20,7 @@ pnpm build            # every app builds; catches env and import issues dev mode
 Rules that no gate catches but you must check by reading the diff:
 
 - No `any`, no `as unknown as X` to silence errors, no `// @ts-ignore`. `// @ts-expect-error` only with a reason and a link.
-- No `console.log` left behind. Structured logging in the API (`c.get('logger')` or a tiny wrapper) with request id.
+- No `console.log` left behind. Structured logging in the API (`c.get('logger')` or a tiny wrapper) with request id. Log ids, never request bodies, headers, tokens, or personal data (emails, names, phone numbers).
 - No secrets, keys or hosted URLs hard-coded. Everything from env, and every env var is in the app's `.env.example`.
 - No dead code, commented-out blocks, or TODOs without a feature id.
 - Dependencies added with `pnpm add` in the right workspace, and each one justified (would a 20-line function do?). `pnpm ls --depth 0 --filter <app>` shows nothing unexpected.
@@ -52,6 +52,8 @@ First-time setup per app happens the first time the feature loop needs it (`pnpm
 - **Never** swallow an error (`catch {}`), and never show the user a stack trace or a raw Postgres message.
 
 ## 4. Security basics (every feature)
+
+These are the builder's rules. The `verify` stage (`.claude/skills/verification/SKILL.md`) checks them again independently, with real requests, so build them in rather than leaving them for verification to find.
 
 - API verifies the Supabase JWT on every non-public route; ownership/role checks happen in the service, *and* RLS policies exist for the same rule.
 - Service-role key is only ever in `apps/api` bindings. Grep for it in `apps/web`, `apps/mobile`, `apps/site` — must be zero hits.

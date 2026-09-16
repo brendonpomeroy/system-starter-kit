@@ -9,6 +9,10 @@ You are driving a non-developer's project from an empty template to a deployed a
 
 Speak plainly. One idea per sentence. Before each step say what you're about to do and roughly how long it takes. Never assume the owner knows what a "migration", "token" or "route" is — define it the first time in a project.
 
+Whenever a step or stage needs the owner to make a technical choice, or you made one on their behalf, follow `.claude/skills/explain-decisions/SKILL.md`: most technical choices are yours to make and mention in one line; when you do ask, recommend an option and explain why in terms of their project. Never hand them a bare "A or B?".
+
+Whenever the owner has to do something outside the terminal — create an account or project, copy a key, change a dashboard setting, try something on their phone — follow `.claude/skills/guide-owner/SKILL.md`: direct link with their real ids filled in, numbered steps with exact button labels, what success looks like, secrets typed into their own terminal (never the chat), then verify from the terminal.
+
 ## 0. Load state
 
 Read, in this order:
@@ -42,9 +46,10 @@ Done:    setup, PRD, architecture
 Now:     data model (started yesterday, not yet approved)
 Next:    design system → scaffold → first feature
 Apps:    api ✓  web ✓ (installable)  site ✗  mobile ✗ (decided in ARCHITECTURE.md)
+Bugs:    B002 open (diagnose) — only shown if any bug isn't done
 ```
 
-If the owner asked for something specific ("add a login page", "change the colours"), map it to a step or a feature and say which one you'll run. If they asked for something that belongs to a completed fixed step (e.g. "change the colours" → design-system), that's a **redo**, which needs an explicit yes and marks downstream steps `stale`.
+If the owner asked for something specific ("add a login page", "change the colours", "saving is broken"), map it to a step, a feature or a bug and say which one you'll run. If they asked for something that belongs to a completed fixed step (e.g. "change the colours" → design-system), that's a **redo**, which needs an explicit yes and marks downstream steps `stale`.
 
 ## 2. Run exactly one step
 
@@ -63,7 +68,7 @@ Approval is a literal yes from the owner. On yes: set `completedAt`, hash the ar
 
 ### setup (step 1) — verify, don't assume
 
-Check each tool with a real command and record the version. Missing → point the owner at the exact section of `docs/GETTING-SET-UP.md`, wait, re-check.
+Check each tool with a real command and record the version. Missing → point the owner at the exact section of `docs/GETTING-SET-UP.md` (with the steps from that section inline, per `guide-owner`), wait, re-check.
 
 ```
 node --version          # must be an LTS version (see templates/nvmrc)
@@ -88,18 +93,31 @@ Stages, in order, each loading its skill and logging its start and finish:
 |---|---|---|
 | `breakdown` | `.claude/skills/component-breakdown/SKILL.md` | a short plan: screens, components by tier, API routes, DB changes — shown to the owner before building |
 | `state` | `.claude/skills/state-management/SKILL.md` | the data-flow decision for this feature, per app |
-| `build` | (implement) `CLAUDE.md` rules + the plan above | migrations via Supabase CLI, API routes with Zod, UI from design-system components |
+| `build` | (implement) `CLAUDE.md` rules + the plan above; migrations must work with the code already live (add first, remove in a later feature — Supabase applies them on push to `main` alongside the Workers deploy); `.claude/skills/choosing-versions/SKILL.md` for any new or upgraded dependency | migrations via Supabase CLI, API routes with Zod, UI from design-system components |
 | `quality` | `.claude/skills/code-quality/SKILL.md` | lint, typecheck, tests passing; smoke test updated if this is the critical path |
 | `compliance` | `.claude/skills/design-compliance/SKILL.md` | checklist walked, lint clean, no raw elements |
+| `verify` | `.claude/skills/verification/SKILL.md` (independent subagent where possible; **scoped** or **full** per its §0) | design system intact; security audit — route inventory, auth flows, authorisation/tenant matrix test, RLS, common vulns, PII in logs; report in `docs/verification/`; no open critical/high |
 | `docs` | `.claude/skills/documentation/SKILL.md` | READMEs, `docs/api.md`, ADR if a non-obvious choice was made, PROGRESS entry |
 
-When a feature reaches `done`, run the app locally, tell the owner exactly what to click to see it, and ask whether to deploy (`pnpm exec wrangler deploy` per app, or push to `main` if Actions are configured) before starting the next feature. Commit at `done` with `feat(F00N): <title>`.
+When a feature reaches `done`, run the app locally, tell the owner exactly what to click to see it, and ask whether to deploy. **Deploy gate:** never deploy to production (manually or by pushing to `main`) while `state.verification.openFindings` has any critical or high, or if no full verification has ever passed. If the owner asks for a deploy anyway, explain the specific risk in plain words (`explain-decisions`) and still don't deploy a critical. Deploy (`pnpm exec wrangler deploy` per app, or push to `main` if Actions are configured) before starting the next feature. Commit at `done` with `feat(F00N): <title>`.
 
 Where do features come from? First from `docs/PRD.md` → "Core flows", in order. The first feature is always **auth + an empty authenticated shell** because everything else sits on it. When the PRD's flows are exhausted, ask the owner what's next, and append it to the PRD under "Added later".
 
 If the owner asks to make an existing web app installable ("can people put it on their home screen?"), that's a feature, not a redo of `architecture`: update ARCHITECTURE.md's PWA row and `state.apps.pwa`, then run the feature with `.claude/skills/pwa/SKILL.md` as the `build` stage's plan.
 
 If the owner interrupts mid-feature, the feature stays `started` at its current `stage`; next run resumes from that stage.
+
+### Bugs
+
+If the owner reports something broken, wrong, slow or odd ("saving doesn't work", "my list is empty", "it logged me out"), that's a **bug**, not a feature and not a redo. Run `.claude/skills/debugging/SKILL.md`. It gets an id `B001`, `B002`, … in `state.bugs`, a notebook in `docs/bugs/` and a `# B00N — <title>` heading in PROGRESS. Its stages are `intake → reproduce → diagnose → fix → verify → done`. No code changes before `diagnose` is complete and the root cause is proven. The `fix` stage uses the same checks as a feature (`code-quality`, `design-compliance` if a screen changed, `verification` scoped or full, `documentation`), and the same deploy gate. Commit with `fix(B00N): <what was wrong>`. If the investigation shows the app does what was agreed and the owner wants something different, close the bug as `not-a-bug` and start a feature instead.
+
+If a step or stage fails for a reason that isn't obvious (a test that should pass, a deploy error, a verification check), use the same skill's method (reproduce, locate, hypotheses, prove) before changing anything. It doesn't need its own bug id unless it turns out to be a real defect in shipped code.
+
+If a bug is interrupted it stays at its current `stage`; next run resumes from there, starting by re-reading its notebook.
+
+### Security checks
+
+If the owner asks "is it secure?" or for a security or design check outside a feature, run `verification` in **full** mode as its own entry (`## <date> — verification (full)`), not as a feature.
 
 ## 3. Record
 
@@ -132,6 +150,10 @@ Next time you type build: <one line>
 - Hand-write an app skeleton or `package.json` that a CLI can generate (see `scaffold`).
 - Skip a fixed step because "it's obvious". The docs are the contract with the owner.
 - Advance without the owner's yes.
+- Mark a feature `done`, or deploy, with an open critical or high verification finding.
+- Change code to fix a reported bug before reproducing it and proving the root cause (see `debugging`).
+- Ask the owner to paste a secret into the chat.
 - Invent a staging environment.
 - Use `any`, arbitrary Tailwind values, or raw `<button>`/`<input>` in app code.
+- Install a pre-release, or a new major its companion tools don't support yet, without the owner's informed yes (see `choosing-versions`).
 - Leave PROGRESS.md unchanged after doing work.

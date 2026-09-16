@@ -12,6 +12,7 @@ Interview rules, all sections:
 - Ask **one question at a time**. Wait for the answer. Reflect it back in a sentence before the next question.
 - Prefer concrete examples over abstractions: "Walk me through what happens the first time someone uses it" beats "What are your user personas?".
 - Offer options when the owner hesitates, and say which you'd pick and why.
+- Any question or decision with technical content (hosting, auth method, mobile vs web, data access rules) follows `.claude/skills/explain-decisions/SKILL.md`: recommendation first, trade-offs in the owner's terms (cost, data safety, how hard to undo, what their users notice), tied to the size and needs in their PRD.
 - If the owner gives a long brain-dump, extract the answers to the questions below from it and only ask what's still missing.
 - Keep documents short. A PRD the owner won't read is worthless. Target one screen per section.
 - Write the document, then show the owner the *whole thing* and ask the approval question `/build` specifies. Edit until yes.
@@ -134,7 +135,7 @@ All reads and writes go through the API. Exceptions: <none | list with ADR link>
 Local (Supabase CLI in Docker, wrangler dev) and Production (Cloudflare Workers, hosted Supabase). No staging.
 
 ## Deployment
-Push to `main` → GitHub Actions → migrations, then Workers deploy. Mobile: EAS (if applicable).
+Push to `main` → Supabase GitHub integration applies new migrations → GitHub Actions waits for that check, then deploys the Workers. Mobile: EAS (if applicable).
 
 ## Revisit triggers
 - Add `site` when: …

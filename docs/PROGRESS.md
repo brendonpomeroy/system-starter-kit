@@ -15,7 +15,7 @@ The human-readable record of everything `/build` has done on this project. Newes
 **Error:** (only on failure) the exact error text and what was tried
 ```
 
-Feature entries are grouped under a `# F00N — <title>` heading with one sub-entry per stage (breakdown, state, build, quality, compliance, docs).
+Feature entries are grouped under a `# F00N — <title>` heading with one sub-entry per stage (breakdown, state, build, quality, compliance, verify, docs). Verification entries link to their full report in `docs/verification/`. Bug entries are grouped under a `# B00N — <title>` heading with one sub-entry per stage (intake, reproduce, diagnose, fix, verify) and link to their notebook in `docs/bugs/`; **Decided:** on the diagnose entry states the root cause and whether the owner's first explanation held.
 
 ---
 

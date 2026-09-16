@@ -43,18 +43,19 @@ That's the whole process. From here, Claude drives and you answer questions.
 3. **Architecture** (5 min). Claude decides which pieces to build (web app? website? phone app?) and explains why. You can push back. Note: it will try to talk you *out of* a phone app unless you truly need phone features — that's on purpose, phone apps are much slower to build and release.
 4. **Data model** (10 min). What the app remembers and who can see what. Written in plain English first.
 5. **Design** (20–40 min, fun part). Claude asks about colours, feel and examples you like, then builds a style guide you open in your browser. Iterate until it looks like *yours*.
-6. **Generating the code** (20–60 min, mostly waiting). Claude runs the official tools to create everything, sets up your database, connects GitHub and Cloudflare, and gives you live URLs. It will ask you to create the Supabase and Cloudflare projects in your browser at the right moments, and to paste a few keys.
-7. **Features, one at a time.** The first is always sign-in. After each one Claude tells you what to click to try it, and asks whether to put it live.
+6. **Generating the code** (20–60 min, mostly waiting). Claude runs the official tools to create everything, sets up your database, connects GitHub and Cloudflare, and gives you live URLs. It will ask you to create the Supabase and Cloudflare projects in your browser at the right moments — with a direct link and click-by-click steps each time — and to enter a few keys in your own terminal window. At the end it runs a full security and design check.
+7. **Features, one at a time.** The first is always sign-in. Each one is checked for design consistency and security (including that one user can't see another's data) before it's done. Then Claude tells you what to click to try it, and asks whether to put it live. It won't put something live with a serious security problem.
 
 **Every later session:** open the folder, run `claude`, type `build`. Claude reads `docs/PROGRESS.md`, tells you where things are, and continues. Want something specific? Type `build` and then say what you want ("add a way to export to Excel"). It slots it into the feature loop.
 
 ## Things you'll be asked to do in a browser
 
-Claude can't click in your browser for you. Expect these, each with step-by-step instructions at the time:
+Claude can't click in your browser for you. Expect these, each with a direct link and step-by-step instructions (using the exact button names) at the time:
 
 - Create a Supabase project (choose a region close to your users; save the database password somewhere safe).
 - Create a Cloudflare API token (Claude tells you exactly which permissions).
-- Paste a few secret keys into the terminal when asked. They are stored safely and never written into your code.
+- Connect your Supabase project to your GitHub repository (a few clicks), so database changes go live automatically with the rest of the app.
+- Enter a few secret keys. Claude gives you a command to run in a **separate** terminal window, which asks for the key — so it's stored safely, never shown in the chat, and never written into your code. If you ever paste a key into the chat by mistake, say so and Claude will walk you through replacing it.
 
 ## Stopping and starting
 

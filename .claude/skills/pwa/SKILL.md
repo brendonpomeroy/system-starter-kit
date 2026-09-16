@@ -159,7 +159,7 @@ pnpm --filter web build && pnpm --filter web preview
 - Offline: DevTools → Network → Offline → reload. The shell loads, and data areas show their normal error state with retry (not a blank screen or a dinosaur page).
 - Playwright smoke (added to the existing spec, run against `preview`): `link[rel=manifest]` resolves and parses as JSON with `name` and icons; `navigator.serviceWorker.ready` resolves.
 
-After the first production deploy, on a real iPhone: Add to Home Screen, open it, focus every input on the sign-in screen (no zoom), check the notch/home-indicator areas, deploy a trivial change, and reopen the app to see the update toast. Ask the owner to do this with you and tell them exactly what to tap.
+After the first production deploy, on a real iPhone: Add to Home Screen, open it, focus every input on the sign-in screen (no zoom), check the notch/home-indicator areas, deploy a trivial change, and reopen the app to see the update toast. Ask the owner to do this with you and tell them exactly what to tap (follow `.claude/skills/guide-owner/SKILL.md` §5: the live URL, which browser, each tap named, and a screenshot of the result).
 
 Documentation (via the documentation skill):
 

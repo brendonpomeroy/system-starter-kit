@@ -1,12 +1,16 @@
 name: Deploy
 
-# Deploys every app to Cloudflare Workers and pushes Supabase migrations on every push to main.
+# Deploys every app to Cloudflare Workers on every push to main.
+#
+# Database migrations are NOT run here. The Supabase GitHub integration (Project Settings →
+# Integrations → GitHub, "Deploy to production" on, "Automatic branching" off) applies new
+# files in supabase/migrations when main changes and reports a check on the commit. The
+# `wait-for-supabase` job below holds the Workers deploy until that check passes, so the API
+# never goes live ahead of the schema it needs. See .claude/skills/scaffold/SKILL.md §8.
+#
 # Required repository secrets (GitHub → Settings → Secrets and variables → Actions):
 #   CLOUDFLARE_API_TOKEN     — Workers Scripts:Edit + Account Settings:Read
 #   CLOUDFLARE_ACCOUNT_ID
-#   SUPABASE_ACCESS_TOKEN    — from supabase.com/dashboard/account/tokens
-#   SUPABASE_PROJECT_REF
-#   SUPABASE_DB_PASSWORD
 #   VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_API_URL   (web build-time)
 #   PUBLIC_SITE_URL, PUBLIC_APP_URL                            (site build-time, if apps/site exists)
 # The scaffold skill removes jobs for apps that were not generated.
@@ -21,28 +25,61 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  migrate:
-    name: Supabase migrations
+  wait-for-supabase:
+    name: Wait for Supabase migrations
     runs-on: ubuntu-latest
+    permissions:
+      checks: read
+      statuses: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
-      - run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-      - run: supabase db push
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      # Polls this commit for the Supabase integration's result (check run or commit status,
+      # whichever it reports). Passes straight through if the commit reports nothing from
+      # Supabase within ~2 minutes (no migration changes). Scaffold confirms the check's real
+      # name after the first push and tightens the filter if needed.
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          seen=0
+          for i in $(seq 1 60); do
+            runs=$(gh api "repos/$REPO/commits/$SHA/check-runs" \
+              --jq '[.check_runs[] | select((.app.slug // "" | ascii_downcase | contains("supabase")) or (.name | ascii_downcase | contains("supabase")))]')
+            stats=$(gh api "repos/$REPO/commits/$SHA/status" \
+              --jq '[.statuses[] | select(.context | ascii_downcase | contains("supabase"))]')
+            count=$(( $(echo "$runs" | jq length) + $(echo "$stats" | jq length) ))
+            if [ "$count" -gt 0 ]; then
+              seen=1
+              pending=$(( $(echo "$runs" | jq '[.[] | select(.status != "completed")] | length') + $(echo "$stats" | jq '[.[] | select(.state == "pending")] | length') ))
+              failed=$(( $(echo "$runs" | jq '[.[] | select(.status == "completed" and (.conclusion | IN("success","neutral","skipped") | not))] | length') + $(echo "$stats" | jq '[.[] | select(.state == "failure" or .state == "error")] | length') ))
+              if [ "$failed" -gt 0 ]; then echo "Supabase deployment failed — not deploying Workers."; exit 1; fi
+              if [ "$pending" -eq 0 ]; then echo "Supabase deployment succeeded."; exit 0; fi
+            elif [ "$i" -ge 12 ]; then
+              echo "No Supabase check on this commit after 2 minutes — assuming no database changes."; exit 0
+            fi
+            sleep 10
+          done
+          echo "Timed out waiting for Supabase (seen=$seen)."; exit 1
+
+  # Fallback only — use instead of the integration if it can't be connected (record why in an ADR).
+  # Needs secrets SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_REF, SUPABASE_DB_PASSWORD, and
+  # `needs: migrate` on the build job in place of wait-for-supabase.
+  # migrate:
+  #   name: Supabase migrations (CLI fallback)
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: supabase/setup-cli@v1
+  #     - run: supabase link --project-ref "$SUPABASE_PROJECT_REF" && supabase db push
+  #       env:
+  #         SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+  #         SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+  #         SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
 
   build:
     name: Build all apps
     runs-on: ubuntu-latest
-    needs: migrate
+    needs: wait-for-supabase
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

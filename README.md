@@ -31,7 +31,8 @@ That's it. Open Claude Code inside this folder and type `build`. It will:
 4. Sketch the data your app stores and who is allowed to see what.
 5. Interview you about the look and feel, then build your design system and a style guide you can open in a browser.
 6. Generate the codebase using the official command-line tools.
-7. Build your app one feature at a time, checking quality, documentation and design consistency as it goes.
+7. Build your app one feature at a time, checking quality, design consistency and security as it goes — including testing that one customer can never see another's data.
+8. When something breaks, find the real cause before changing anything: reproduce it, prove why it happens, then fix it with a test so it can't quietly come back.
 
 Stop whenever you like. Next time you type `build`, it reads `docs/PROGRESS.md`, tells you where things are, and continues.
 
@@ -59,13 +60,18 @@ Stop whenever you like. Next time you type `build`, it reads `docs/PROGRESS.md`,
 │       ├── component-breakdown/ ← how UI is split into pieces
 │       ├── state-management/    ← how data flows through each app
 │       ├── design-compliance/   ← keeps every screen on-brand
-│       └── pwa/                 ← makes the web app installable and self-updating
+│       ├── verification/        ← independent design + security check before anything goes live
+│       ├── pwa/                 ← makes the web app installable and self-updating
+│       ├── choosing-versions/   ← picks stable, compatible tool versions
+│       ├── guide-owner/         ← step-by-step directions (with links) when you need to do something in a browser
+│       └── explain-decisions/   ← explains technical choices to you in plain language
 ├── docs/
 │   ├── GETTING-SET-UP.md
 │   ├── STARTING-A-NEW-PROJECT.md
 │   ├── ARCHITECTURE-EXPLAINED.md
 │   ├── PROGRESS.md              ← the human-readable log of every step
-│   └── adr/                     ← records of decisions made along the way
+│   ├── adr/                     ← records of decisions made along the way
+│   └── verification/            ← design and security check reports
 └── templates/                   ← config files the scaffold step copies into place
 ```
 
@@ -73,10 +79,13 @@ After `build` has run, you'll also see `apps/` (your generated applications), `p
 
 ## Rules the kit lives by
 
-- **Generated, not hand-written.** Apps are created with the latest official CLI (`create-vite`, `create-hono`, `create-astro`, `create-expo-app`, `supabase init`). Dependencies are added with `pnpm add`, never by editing `package.json` by hand.
+- **Generated, not hand-written.** Apps are created with the official CLI (`create-vite`, `create-hono`, `create-astro`, `create-expo-app`, `supabase init`). Dependencies are added with `pnpm add`, never by editing `package.json` by hand.
+- **Stable, not bleeding edge.** Tools are kept on the newest version that everything else already works with — not the newest release on day one, which is where the surprises live.
+- **You get a recommendation, not a quiz.** When Claude needs you to make a technical choice, it explains it in plain language, says what it would pick and why, and tells you how easy it is to change later.
 - **Nothing is built before it's planned.** The PRD, architecture and data model are approved by you first.
 - **One design system.** Every screen, on every platform, is built from the same tokens and components. No one-off colours.
 - **Two environments only.** Your laptop (local) and production. Simple to reason about, cheap to run.
+- **Checked before it goes live.** Every feature gets an independent design and security check. Serious problems block the deploy until they're fixed.
 - **Everything is logged.** `docs/PROGRESS.md` says what was done and when. `docs/adr/` says why.
 
 ## For the technically curious
