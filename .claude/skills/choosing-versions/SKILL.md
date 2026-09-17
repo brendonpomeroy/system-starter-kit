@@ -77,5 +77,6 @@ Never offer "use the unsupported version anyway" as an equal choice with no reco
 ## Record it
 
 - Scaffold: list every CLI and key package version in `docs/adr/0001-scaffold.md` under **Versions**. Wherever you held something back, add a one-line reason and the condition to revisit it ("revisit when typescript-eslint supports TS 7").
-- Later changes: a held-back major gets a PROGRESS note. When its companions catch up, suggest the upgrade to the owner as its own feature (`F0NN: upgrade <tool> to <major>`), never slipped into another feature.
+- Later changes: a held-back major gets a PROGRESS note. The `maintenance` skill rechecks it on every run. When its companions catch up, add an `upgrade` backlog item ("upgrade <tool> to <major>") and suggest it to the owner. Never slip it into another feature.
+- Patch and minor updates within the allowed ranges are applied by `maintenance` in one batch, not piecemeal inside features.
 - Upgrading a major is a feature like any other: breakdown (what changes), build, then `quality` must pass clean.

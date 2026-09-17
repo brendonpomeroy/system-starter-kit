@@ -200,6 +200,8 @@ body { margin: 0; font-family: var(--font-sans); font-size: var(--text-base); li
     <a href="#radius">Radii &amp; elevation</a>
     <a href="#components">Components</a>
     <a href="#patterns">Patterns</a>
+    <a href="#motion">Motion</a>
+    <a href="#a11y">Accessibility</a>
     <a href="#screens">Key screens</a>
     <a href="#rules">Do / don't</a>
     <div style="margin-top:var(--space-6)">
@@ -331,7 +333,19 @@ body { margin: 0; font-family: var(--font-sans); font-size: var(--text-base); li
       <div class="page-header"><div><div class="h2">Projects</div><div class="text-sm muted">12 active</div></div><button class="btn btn-primary">New project</button></div>
       <table class="table"><tr><th>Name</th><th>Owner</th><th>Status</th><th></th></tr><tr><td>Website refresh</td><td><span class="avatar" style="width:24px;height:24px">BP</span></td><td><span class="badge badge-success">Active</span></td><td class="text-sm muted">Edited 2h ago</td></tr></table>
       <div class="empty" style="margin-top:var(--space-6)"><div class="h4">No projects yet</div><p class="text-sm" style="margin:var(--space-2) 0 var(--space-4)">Create your first project to get started.</p><button class="btn btn-primary">New project</button></div>
-      <!-- TODO: form layout, loading state, error state -->
+      <!-- TODO: form layout; states per the ux skills — empty (first use / no results / done), loading (list first load, refetching, button saving, upload progress, background job), errors (field, form summary, region + retry, 404, offline banner, persistent error toast), success (toast with Undo, highlighted new row) -->
+    </section>
+
+    <section id="motion" class="sg-section">
+      <h2>Motion</h2>
+      <p class="lead">Durations, easings and transitions from the motion tokens. With Reduce motion on, movement becomes a fade or is instant.</p>
+      <!-- TODO: live demos (dialog, sheet, toast, list add/remove) using --motion-* variables, plus a "Reduced motion" toggle that mimics prefers-reduced-motion. See .claude/skills/motion/SKILL.md -->
+    </section>
+
+    <section id="a11y" class="sg-section">
+      <h2>Accessibility</h2>
+      <p class="lead">Target: WCAG 2.2 AA (see docs/ACCESSIBILITY.md for any owner-accepted exceptions).</p>
+      <!-- TODO: focus ring on each component, minimum target sizes, status shown with icon + text (not colour alone), contrast table reference. See .claude/skills/accessibility/SKILL.md -->
     </section>
 
     <section id="screens" class="sg-section">

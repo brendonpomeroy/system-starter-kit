@@ -132,6 +132,19 @@ pnpm --filter mobile add @supabase/supabase-js hono @<project>/design-system @<p
 
 Should already exist from step 5 of `/build`. Verify it builds (`pnpm --filter design-system build:tokens`) and that each app resolves it (workspace protocol `workspace:*` — check with `pnpm ls --filter web`).
 
+## 7b. UX foundations (web, and mobile if chosen)
+
+Every feature relies on these, so build them once here using `.claude/skills/ux/SKILL.md` and its helper skills:
+
+- ESLint `jsx-a11y` is on (installed with the other plugins in §1).
+- In `AppShell`: `SkipLink`, the `Announcer` live region, the toast region, focus-and-title handling on route change (`accessibility` §5), the offline banner and the app-level error boundary (`error-states` §3).
+- Auth bootstrap splash so neither the sign-in screen nor protected content flashes (`loading-states` §2).
+- `lib/error-messages.ts` covering the `ErrorCode` values the API has so far, with `ErrorCode` exported from `@<project>/api-types`.
+- `components/composed/AsyncRegion.tsx` and `lib/useDelayedFlag.ts` (`loading-states` §4).
+- `MotionConfig reducedMotion="user"` at the root if a motion library was chosen; the View Transitions route cross-fade (`motion` §5).
+- Playwright: `pnpm --filter web add -D @axe-core/playwright` and `e2e/a11y.spec.ts` scanning the sign-in screen and the empty shell. Check the package and API are current first (`choosing-versions`).
+- `docs/ACCESSIBILITY.md` exists (created in design-system); add the "Last checked" line after verification.
+
 ## 8. GitHub + Cloudflare
 
 - `git init` if needed, `.gitignore` present, initial commit `chore(scaffold): generate monorepo`.
@@ -142,18 +155,20 @@ Everything in this section that the owner does in a browser follows `.claude/ski
 - Cloudflare: `wrangler whoami` for account id. For each app: `pnpm --filter <app> exec wrangler deploy` once, manually, so the Workers exist and the owner sees a live URL. Then the api's Worker secrets (`wrangler secret put SUPABASE_SERVICE_ROLE_KEY` etc.) using the **hosted** Supabase project's values — the owner runs these in their own terminal (guide-owner §2); confirm with `wrangler secret list`.
 - Hosted Supabase: the owner creates the project in the dashboard (guide-owner: new-project link, which organisation, project name, a generated database password saved in their password manager *before* clicking create, region nearest their users, free plan). Then `supabase link --project-ref …` (for type generation and advisors — **not** for pushing migrations). Set the hosted project's auth `site_url` and redirect URLs to the web Worker URL in the dashboard: the integration does not deploy auth settings from `config.toml`.
 - **Supabase ↔ GitHub (the default way migrations reach production).** Guide the owner through connecting it: Project Settings → Integrations (`https://supabase.com/dashboard/project/<ref>/settings/integrations`) → **Authorize GitHub** → choose the repo → **Working directory** `.` (the folder that contains `supabase/`) → production branch `main` → **Deploy to production** on → **Automatic branching** off (preview databases are a paid feature and would be a staging environment, which the kit doesn't use) → **Enable integration**. Check the current docs for the labels first (`https://supabase.com/docs/guides/deployment/branching/github-integration`). From then on, a push to `main` applies new migration files (and storage buckets declared in `config.toml`); seed data never reaches production. Verify after the first push: the commit shows a Supabase check (`gh api repos/<owner>/<repo>/commits/<sha>/check-runs` and `/status`), and `supabase migration list --linked` shows local and remote in step. Tighten the check-name filter in `deploy.yml`'s `wait-for-supabase` job to the real name you see. If the integration truly can't be connected (e.g. an organisation policy blocks the GitHub app), use the commented CLI `migrate` job in `deploy.yml` instead and record why in an ADR.
-- GitHub secrets: list every name from the comment at the top of `deploy.yml`; for each, send the owner to the exact page that shows the value (guide-owner §4 links) and have them run `gh secret set NAME` **in their own terminal window** so the value never enters the chat. Non-secret values (project ref, account id, URLs) you can set yourself. Confirm with `gh secret list`.
+- GitHub secrets: list every name from the comment at the top of `deploy.yml`; for each, send the owner to the exact page that shows the value (guide-owner §4 links) and have them run `gh secret set NAME` **in their own terminal window** so the value never enters the chat. Non-secret values (project ref, account id, URLs) you can set yourself, including the repository variable `gh variable set WEB_URL --body https://<web-host>` for the smoke job. Confirm with `gh secret list` and `gh variable list`.
 - Push to `main`, watch `gh run watch`, confirm green.
 
 ## 9. Verification (full)
 
-Load `.claude/skills/verification/SKILL.md` in **full** mode. Scaffold is where sign-in, the first tables and their RLS policies are created, so prove them now: route inventory, auth flows on the sign-in screen, the first version of the authorisation matrix test (`authz.matrix.test.ts`) with the seeded users, RLS checked directly, design system in sync. Fix every critical and high before the approval question. Set `state.verification`.
+Load `.claude/skills/verification/SKILL.md` in **full** mode. Scaffold is where sign-in, the first tables and their RLS policies are created, so prove them now: route inventory, auth flows on the sign-in screen, the first version of the authorisation matrix test (`authz.matrix.test.ts`) with the seeded users, RLS checked directly, design system in sync, axe clean and keyboard-operable sign-in (§1.3). Fix every critical and high before the approval question. Set `state.verification`.
 
 ## 10. Documentation and hand-off
 
 Load `.claude/skills/documentation/SKILL.md` and produce: root `README.md` (replace the template's — the project's own, with the live URLs), per-app READMEs, `docs/api.md`, and update `CLAUDE.md` if any path differs from the kit default. ADR `0001-scaffold.md` recording every CLI version used, a **Versions** table of key packages (with the reason and revisit condition for anything held back from its newest major), and any place a template was adapted. Confirm `pnpm install` shows no unmet peer-dependency warnings.
 
-Tell the owner, in plain words: the verification summary, the three URLs (api, web, site), how to run locally (`pnpm dev` + `supabase start`), and that the next `build` starts feature F001 (auth end-to-end).
+Seed `docs/BACKLOG.md` from the PRD's core flows (backlog skill §7). The first item is auth end-to-end. Record the first production deploy in `state.deploys` (items `["scaffold"]`) and run the release skill's post-deploy check (§3) against it.
+
+Tell the owner, in plain words: the verification summary, the three URLs (api, web, site), how to run locally (`pnpm dev` + `supabase start`), that the next `build` starts feature F001 (auth end-to-end), and that from now on ideas go in `docs/BACKLOG.md` (they can add to it themselves).
 
 Approval question from `/build`: **"Everything runs on your machine. Ready to start building features?"**
 

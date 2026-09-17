@@ -15,7 +15,7 @@ The human-readable record of everything `/build` has done on this project. Newes
 **Error:** (only on failure) the exact error text and what was tried
 ```
 
-Feature entries are grouped under a `# F00N — <title>` heading with one sub-entry per stage (breakdown, state, build, quality, compliance, verify, docs). Verification entries link to their full report in `docs/verification/`. Bug entries are grouped under a `# B00N — <title>` heading with one sub-entry per stage (intake, reproduce, diagnose, fix, verify) and link to their notebook in `docs/bugs/`; **Decided:** on the diagnose entry states the root cause and whether the owner's first explanation held.
+Feature entries are grouped under a `# F00N — <title>` heading with one sub-entry per stage (breakdown, state, ux, build, quality, compliance, verify, docs). Change entries are grouped under `# C00N — <title>` (plan, build, quality, verify, docs); an escalated change ends with a line pointing to its `F00N`. Releases are `## <date> — release — <ids>` (what went out, migration yes/no, post-deploy check result); rollbacks get their own release entry. Maintenance runs are `## <date> — maintenance` and link to `docs/maintenance/`. Backlog reviews are `## <date> — backlog review`. Any entry that edited PRD, ARCHITECTURE, DATA-MODEL or the style guide ends with `**Rehashed:** <file>`. Verification entries link to their full report in `docs/verification/`. Bug entries are grouped under a `# B00N — <title>` heading with one sub-entry per stage (intake, reproduce, diagnose, fix, verify) and link to their notebook in `docs/bugs/`; **Decided:** on the diagnose entry states the root cause and whether the owner's first explanation held.
 
 ---
 
@@ -29,4 +29,4 @@ _(filled in by the setup step)_
 ---
 
 ## Owner notes
-_(anything you want the next run to know)_
+_(anything you want the next run to know. Ideas for the app itself go in [BACKLOG.md](BACKLOG.md).)_

@@ -1,6 +1,6 @@
 {
   "$schema": "./state.schema.json",
-  "kitVersion": "1.0.0",
+  "kitVersion": "1.1.0",
   "projectName": null,
   "steps": {
     "setup": { "status": "pending", "startedAt": null, "completedAt": null, "artifact": null },
@@ -18,7 +18,17 @@
     "pwa": null
   },
   "features": [],
+  "changes": [],
   "bugs": [],
+  "deploys": [],
+  "maintenance": {
+    "lastRun": null,
+    "lastReport": null,
+    "lastCommit": null,
+    "cadenceDays": 30,
+    "deferredUntil": null
+  },
+  "preferences": { "push": null, "deploy": "ask" },
   "verification": {
     "lastFull": null,
     "lastReport": null,

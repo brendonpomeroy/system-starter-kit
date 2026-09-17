@@ -1,6 +1,6 @@
 ---
 name: pwa
-description: Make apps/web an installable Progressive Web App — web app manifest, icon set generated from one source logo, a service worker that caches only the app shell, an "update available" prompt with periodic update checks, Cloudflare Workers cache headers, iOS/Android install UX, safe areas and standalone-mode gotchas. Called by scaffold when ARCHITECTURE.md says the web app is installable, or by /build as a feature ("make it installable") added later.
+description: Make apps/web an installable Progressive Web App — web app manifest, icon set generated from one source logo, a service worker that caches only the app shell, an "update available" prompt with periodic update checks, Cloudflare Workers cache headers, iOS/Android install UX, app-style back navigation (top-level vs pushed screens, a back action that works after a deep link, history that matches the Android back gesture), safe areas and standalone-mode gotchas. Called by scaffold when ARCHITECTURE.md says the web app is installable, or by /build as a feature ("make it installable") added later.
 ---
 
 # pwa — installable web app that stays up to date
@@ -11,7 +11,7 @@ Three things matter more than anything else here, in this order:
 
 1. **Installed copies must update.** A service worker (SW) that caches too hard leaves users stuck on an old build forever. Every choice below is biased towards freshness.
 2. **Never cache user data.** Cache the app shell (HTML, JS, CSS, fonts, icons) only. API responses and Supabase auth calls always go to the network.
-3. **It must feel native on iPhone.** No zoom on input focus, no content under the notch, a back button inside the app (there is no browser back in standalone mode).
+3. **It must feel native on iPhone.** No zoom on input focus, no content under the notch, a way back from every screen that isn't in the main nav, because there is no browser back button or address bar once installed (§7).
 
 Only `apps/web` becomes a PWA. `apps/site` gets favicons and theme colour (§3) but no service worker.
 
@@ -21,7 +21,7 @@ Log start/finish of each section in `docs/PROGRESS.md` (as a sub-entry of `scaff
 
 ## 0. Prerequisites
 
-- `docs/ARCHITECTURE.md` records "Installable (PWA): Yes" and `.claude/state.json → apps.pwa` is `true`. If this runs as a later feature, update both first (+ ADR, see §9).
+- `docs/ARCHITECTURE.md` records "Installable (PWA): Yes" and `.claude/state.json → apps.pwa` is `true`. If this runs as a later feature, update both first (+ ADR, see §10).
 - Design system exists with: `packages/design-system/assets/app-icon.svg` (square mark, no fine text) and the generated browser-chrome colours in `generated/meta.ts` (`themeColor`, `themeColorDark`, `backgroundColor`). Missing → go back to the design-system skill for just those pieces; don't hand-pick hex values here.
 - The `Toast` primitive exists (the update prompt uses it).
 
@@ -81,7 +81,7 @@ In `apps/web/vite.config.ts`, add `VitePWA({...})`:
   - `navigateFallbackDenylist`: any path the Worker must serve itself (e.g. `/^\/api\//` if the API is ever same-origin, auth callback routes if they're server-handled).
   - `cleanupOutdatedCaches: true`
   - **No `runtimeCaching` for the API or Supabase.** Both are on other origins today, and even if that changes, data is never cached by the SW. Offline data is a `state-management` decision with its own ADR.
-- `devOptions.enabled: false` (default). Test the SW against a production build (§8), not `vite dev`. A dev SW causes confusing stale-code bugs.
+- `devOptions.enabled: false` (default). Test the SW against a production build (§10), not `vite dev`. A dev SW causes confusing stale-code bugs.
 
 ## 5. Update flow — "New version available"
 
@@ -105,12 +105,69 @@ Create `apps/web/src/features/shell/UpdatePrompt.tsx`, mounted once in `AppShell
 - **No zoom on input focus (iOS).** Safari zooms when a focused `input`, `textarea` or `select` has a computed font size below 16px. The design-system `Input`, `Textarea` and `Select` use at least `text-base` (16px) **at every breakpoint**. No `sm:text-sm` downshift, because iPads hit that breakpoint and zoom too. Verify on a real iPhone or the iOS Simulator.
 - **Safe areas.** With `viewport-fit=cover`, the shell pads with `env(safe-area-inset-top|bottom|left|right)`. Expose these as Tailwind utilities in the design-system preset (e.g. `pt-safe`, `pb-safe`) so app code never writes raw `env()`. Bottom nav bars and sticky footers need `pb-safe`.
 - **Viewport height.** Use `min-h-dvh`/`h-dvh`, never `h-screen`/`100vh`. Mobile browser chrome makes `100vh` taller than the visible area.
-- **Back navigation.** Standalone mode has no browser back button on iOS. Every non-root screen in the shell has an in-app back affordance (`PageHeader` back action).
+- **Back navigation.** Standalone mode has no address bar and no back button. §7 covers it in full.
 - **No pull-to-refresh in iOS standalone.** That's another reason the §5 foreground update check matters. Screens with live data use their query's refetch-on-focus, not a manual refresh.
 - **Links.** External links open outside the app (`target="_blank" rel="noopener"`). Internal links stay client-side so they don't bounce the user into Safari.
 - `overscroll-behavior-y: none` on the app shell's root scroll container stops the whole app from rubber-banding. Scroll areas inside it keep native bounce.
 
-## 7. Install experience
+## 7. Navigation without browser controls
+
+Once installed, the app has no address bar, no back or forward buttons and no reload. On iOS there is no system back button either, and the edge swipe can't be relied on. A user who taps into a detail screen and finds no way out has to force-quit the app. So navigation is designed the way native apps do it, and the same rules apply in a normal browser tab (they cost nothing there and keep the app consistent).
+
+### 7.1 Three kinds of screen
+
+Every route in `router.tsx` is one of:
+
+| Kind | Examples | Header | Main nav |
+|---|---|---|---|
+| **Top-level**: a destination in the main nav (bottom tab bar on phones, sidebar on wide screens) | Home, Projects, Inbox, Account | Title only. **No back button**; the nav is how you move between these. | Visible, with this item marked active |
+| **Pushed**: reached by going *into* something from another screen | a project's detail page, Settings → Notifications, an edit page | `PageHeader` with a **back action** on the left, then the title | Visible, with the *parent's* nav item marked active, so the user still knows where they are |
+| **Focused flow**: a task you finish or abandon (create, multi-step setup, checkout, a full-screen editor) | New project, onboarding | **Close** (✕) or **Cancel** instead of back; inside the flow, back goes to the previous step | Hidden, so the user finishes or cancels |
+
+Each non-top-level route declares its **parent** in its route definition (React Router `handle`, e.g. `handle: { kind: "pushed", parent: "/projects", backLabel: "Projects" }`; parents that depend on params build the path from them). The component-breakdown plan lists kind and parent for every new screen. A route with no declared kind fails a unit test that walks the route tree, so a new screen can't ship without a way back.
+
+### 7.2 What the back button does
+
+"Go back one step in history" alone is wrong in an installed app. If the user opened the screen from a shared link, a notification or a cold start, there is no earlier in-app page: `history.back()` does nothing on iOS and closes the app on Android. So the back action is one shared hook, `useBack()` in `src/features/shell/`:
+
+- **The user got here from inside the app** (React Router: `location.key !== "default"`) → `navigate(-1)`. This returns them to the exact list they came from, with its filters, tab and scroll position intact (scroll needs React Router's `<ScrollRestoration />` in the root layout).
+- **This is the first screen of the session** (deep link, reload, cold start) → `navigate(parent, { replace: true })`. They land on the logical parent instead of leaving the app.
+
+`PageHeader`'s back action always calls `useBack()`, never `history.back()` or a hard-coded `<Link>` to the parent (a hard-coded link adds a *forward* history entry, so the system back gesture then bounces them back into the detail screen).
+
+### 7.3 Keep the history sensible
+
+Android's system back button and gesture work in an installed PWA and walk the browser history; when the history runs out, the app closes. The history must therefore match what the user thinks "back" means:
+
+- **Switching between top-level tabs replaces, except when leaving Home.** History ends up as `[Home, current tab]`, so back from any tab goes to Home, and back from Home closes the app, like a native Android app. (Put this in the nav component, not in each link.)
+- **Redirects replace.** Sign-in → app, `/` → `/home`, "not allowed" → somewhere else: always `{ replace: true }`, so back never lands on a page that immediately redirects forward again (a trap the user can't escape).
+- **After submitting a form, replace.** Creating a project replaces `/projects/new` with `/projects/:id` (or returns to the list with the new item visible, per the ux skill). Back must never reopen a form that has already been submitted.
+- **Sign-out replaces** with the sign-in screen, so back can't show a signed-in page from memory.
+- **Steps of a multi-step flow go in the URL** (`?step=2`), so back goes to the previous step without losing input. Close (✕) leaves the whole flow with `replace`, and warns first if there's unsaved input (error-states: router blocker).
+- **Sheets and full-screen dialogs that hold content** (a filter sheet, a record opened in a side panel, an image viewer) open with a URL search param (`?sheet=filters`), so the Android back gesture closes the sheet instead of leaving the screen underneath. Small confirmation dialogs don't touch history; Escape and their buttons close them.
+
+### 7.4 How the back button looks
+
+- Built into the design-system `PageHeader` (`back` prop), not rebuilt per screen: a chevron icon plus the parent's short label ("Projects") when it fits, otherwise the icon alone.
+- Accessible name says where it goes: "Back to Projects". Touch target at least 44×44 (Apple's minimum, above WCAG 2.2's 24×24), in the top-left, clear of the notch (`pt-safe` on the header).
+- Wide screens may show breadcrumbs in addition (ux skill: navigation and wayfinding), but the back action stays so behaviour is the same everywhere.
+- Returning via back uses the "back" direction of the route transition (motion skill), and moves focus to the page heading of the screen returned to (accessibility §5).
+
+### 7.5 Test it
+
+Vitest: the route-tree test from §7.1 (every route has a kind; every pushed or flow route has a parent that exists).
+
+Playwright (in the existing smoke spec):
+
+- **Cold start on a pushed screen:** open `/projects/:id` directly in a fresh page → tap back → lands on `/projects`, and the app is still open (not `about:blank`).
+- **Round trip keeps context:** list → apply a filter → scroll → open an item → back → same filter and roughly the same scroll position.
+- **Submitted form isn't in history:** create an item → `page.goBack()` → not on the form.
+- **Sheet closes on system back:** open a sheet → `page.goBack()` → sheet closed, same screen underneath.
+- **Sign-in isn't in history:** sign in → `page.goBack()` → not on the sign-in screen.
+
+On real devices (part of the §10 phone check with the owner): on iPhone, open the installed app, go several screens deep and get back to the start using only in-app buttons. On Android, do the same with the system back gesture, and confirm back from Home closes the app rather than looping.
+
+## 8. Install experience
 
 - **Android / desktop Chromium:** capture `beforeinstallprompt`, `preventDefault()` it, and show an "Install app" button in the account menu or a dismissible banner after the user has done something meaningful (not on first load). Call `prompt()` on click. Hide after `appinstalled`.
 - **iOS / iPadOS Safari:** there is no install event. Detect iOS Safari that is *not* already standalone (`matchMedia("(display-mode: standalone)")` false and `navigator.standalone !== true`) and offer a `Sheet` with two illustrated steps: Share → "Add to Home Screen". Check current iOS behaviour first. Recent versions changed Add to Home Screen defaults, so match the copy to what the user will actually see.
@@ -118,7 +175,7 @@ Create `apps/web/src/features/shell/UpdatePrompt.tsx`, mounted once in `AppShell
 - Remember dismissal in `localStorage` for 30 days.
 - Put this in `src/features/install/` (`useInstallPrompt` hook + `InstallBanner` + `IosInstallSheet`), built only from design-system primitives.
 
-## 8. Cloudflare Workers hosting
+## 9. Cloudflare Workers hosting
 
 Create `apps/web/public/_headers` (Vite copies it to `dist`; Workers static assets reads it):
 
@@ -145,7 +202,7 @@ curl -sI https://<web-url>/sw.js | grep -i 'content-type\|cache-control'        
 curl -sI https://<web-url>/manifest.webmanifest | grep -i 'content-type'            # application/manifest+json
 ```
 
-## 9. Prove it, then document
+## 10. Prove it, then document
 
 Local, production build (the SW doesn't run in dev):
 
@@ -159,12 +216,13 @@ pnpm --filter web build && pnpm --filter web preview
 - Offline: DevTools → Network → Offline → reload. The shell loads, and data areas show their normal error state with retry (not a blank screen or a dinosaur page).
 - Playwright smoke (added to the existing spec, run against `preview`): `link[rel=manifest]` resolves and parses as JSON with `name` and icons; `navigator.serviceWorker.ready` resolves.
 
-After the first production deploy, on a real iPhone: Add to Home Screen, open it, focus every input on the sign-in screen (no zoom), check the notch/home-indicator areas, deploy a trivial change, and reopen the app to see the update toast. Ask the owner to do this with you and tell them exactly what to tap (follow `.claude/skills/guide-owner/SKILL.md` §5: the live URL, which browser, each tap named, and a screenshot of the result).
+After the first production deploy, on a real iPhone: Add to Home Screen, open it, focus every input on the sign-in screen (no zoom), check the notch/home-indicator areas, go several screens deep and get back using only in-app buttons (§7.5), deploy a trivial change, and reopen the app to see the update toast. Ask the owner to do this with you and tell them exactly what to tap (follow `.claude/skills/guide-owner/SKILL.md` §5: the live URL, which browser, each tap named, and a screenshot of the result).
 
 Documentation (via the documentation skill):
 
 - ADR `docs/adr/NNNN-pwa.md`: prompt-not-auto update, shell-only caching, no API caching, update check interval, versions of `vite-plugin-pwa` and the assets generator, any doc-vs-skill differences found.
 - `apps/web/README.md`: "Installable app" section covering how updates reach users, how to test the update flow, the kill switch, and where icons come from.
+- `apps/web/README.md` also gets a short "Navigation" note: screen kinds, declaring a route's parent, and why back uses `useBack()`.
 - PROGRESS entry, including what the owner should try on their phone.
 
 ## Auth gotcha to raise with the owner

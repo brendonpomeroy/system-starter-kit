@@ -15,11 +15,13 @@ Documentation in this kit has one reader who matters most: the *next* `/build` r
 | `CLAUDE.md` | Claude's map: layout, rules, skill index, commands | any path/convention changes; new app added |
 | `apps/<app>/README.md` | Run, env vars (name + what it's for, never the value), test, deploy, folder map for that app | any of those change; new feature folder added |
 | `packages/design-system/README.md` | How to add a token / component, regenerate, "the style guide is the spec" | design-system changes |
-| `docs/PRD.md` · `ARCHITECTURE.md` · `DATA-MODEL.md` | The approved plan | DATA-MODEL on every migration; PRD "Added later" on new feature requests; ARCHITECTURE on any app/auth/data-access change (→ ADR too) |
-| `docs/style-guide.html` | Design contract | via design-system skill only |
+| `docs/PRD.md` · `ARCHITECTURE.md` · `DATA-MODEL.md` | The approved plan (living after scaffold) | DATA-MODEL on every migration; PRD "Added later" when a feature's breakdown is approved; ARCHITECTURE on any app/auth/data-access change (→ ADR too). **Rehash in the same commit** (build §0) |
+| `docs/style-guide.html` | Design contract | via design-system skill, or a mock updated in design-compliance. **Rehash in the same commit** |
+| `docs/BACKLOG.md` | Everything waiting to be done | via the backlog skill, whenever something is captured, started or finished |
 | `docs/api.md` | Generated API reference | every feature that touches `apps/api` |
 | `docs/adr/NNNN-*.md` | Why a non-obvious choice was made | when such a choice is made |
 | `docs/PROGRESS.md` | The log | every step/stage, by `/build` |
+| `docs/maintenance/YYYY-MM-DD.md` | Maintenance reports | each maintenance run |
 
 ## 2. ADRs — short, dated, honest
 
@@ -85,7 +87,10 @@ Root `README.md` (project's own):
 Open Claude Code here and type `build`.
 
 ## Deploy
-Push to `main`. GitHub Actions runs migrations then deploys. Watch it at <actions url>.
+Finished work goes live when `build` merges it into `main`: Supabase applies migrations, then GitHub Actions deploys. Watch it at <actions url>. To undo a bad deploy, type `build` and say so.
+
+## What's next
+See [the backlog](docs/BACKLOG.md). Add ideas there any time.
 
 ## Structure
 <short tree with one line per folder>
@@ -108,6 +113,9 @@ Every document the owner is expected to read (README, PRD, ARCHITECTURE, DATA-MO
 Updated: apps/api/README.md (env), apps/web/README.md (features map), docs/api.md (regenerated: +4 routes), docs/DATA-MODEL.md (projects.archived_at)
 ADRs: 0004-tanstack-query-for-web.md
 PRD: no change
+Rehashed: docs/DATA-MODEL.md
 ```
 
 Then `/build` marks the feature `done`.
+
+For a **change** (build → change track), this stage is smaller: update only what the change made untrue. Most changes need nothing beyond the PROGRESS entry.

@@ -23,7 +23,7 @@ Before investigating, check how bad it is:
 
 | Situation | Do first |
 |---|---|
-| Production is down, or users can't sign in or pay | Tell the owner straight away. Offer to **roll back the last deploy** so users are unblocked while you investigate (`pnpm --filter <app> exec wrangler rollback --help` for current flags; list versions with `wrangler deployments list`). Rolling back the Worker **does not** undo a database migration, so check whether the last push included one before recommending it. This is an **ask** under `explain-decisions`. |
+| Production is down, or users can't sign in or pay | Tell the owner straight away. Offer to **roll back the last deploy** so users are unblocked while you investigate. Follow `.claude/skills/release/SKILL.md` §5: roll back web and api together, never the database, then revert `main` so the next push doesn't redeploy the break. `state.deploys` shows whether the last deploy included a migration. This is an **ask** under `explain-decisions`. |
 | Users' data may be exposed to other users, or being corrupted | Treat as **critical**. Stop and tell the owner. Roll back if it helps. Don't try to repair data by hand; that's a separate, owner-approved step (§10). |
 | Wrong, annoying, but not harmful | Normal flow below. |
 
@@ -308,10 +308,10 @@ A small, clearly correct fix is **decide and tell**. **Ask** if the fix changes 
    - no disabled test, lint rule or RLS policy.
 3. Watch the test **pass**. For an intermittent bug, run the loop from §3 again and show the failure rate is now zero.
 4. **Remove the diagnostics:** `rg -n '\[debug B00N\]|debugger;' apps packages` returns nothing.
-5. Run the feature-loop checks that apply: `code-quality` (lint, typecheck, all tests); `design-compliance` if a screen changed; `verification` **scoped** if the fix touched routes, auth, RLS, tenancy or logging (**full** if it touched auth, roles or RLS policies, per its §0); `documentation` (README/api.md/ADR if behaviour changed).
+5. Run the feature-loop checks that apply: `code-quality` (lint, typecheck, all tests); `design-compliance` and `ux` Part B if a screen changed (a fix that changes what users see when something fails follows `error-states`); `verification` **scoped** if the fix touched routes, auth, RLS, tenancy or logging (**full** if it touched auth, roles or RLS policies, per its §0); `documentation` (README/api.md/ADR if behaviour changed).
 6. Run the owner's original steps in the real app (local, then production after deploy) and tell them exactly what to click to see it fixed.
 
-The same deploy gate as features applies: no production deploy with open critical or high verification findings.
+Then hand over to `.claude/skills/release/SKILL.md`. The same deploy gate as features applies (no production deploy with open critical or high verification findings), and its post-deploy check is where step 6's "then production" happens.
 
 ## 11. Record
 

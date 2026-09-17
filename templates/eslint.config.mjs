@@ -5,11 +5,12 @@
 // The scaffold skill installs the plugins with pnpm; do not hand-edit package.json.
 //   pnpm --filter @PROJECT/config add -D eslint @eslint/js typescript-eslint \
 //     eslint-plugin-react-hooks eslint-plugin-react-refresh eslint-plugin-import-x \
-//     eslint-config-prettier
+//     eslint-plugin-jsx-a11y eslint-config-prettier
 
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import reactHooks from "eslint-plugin-react-hooks";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 import importX from "eslint-plugin-import-x";
 import prettier from "eslint-config-prettier";
 
@@ -77,6 +78,12 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
     },
+  },
+  {
+    // Accessibility rules for web JSX. See .claude/skills/accessibility/SKILL.md §6.
+    // Don't disable per file; an owner-accepted exception is recorded in docs/ACCESSIBILITY.md instead.
+    ...jsxA11y.flatConfigs.recommended,
+    files: ["apps/web/src/**/*.tsx", "apps/site/src/**/*.tsx", "packages/design-system/src/components/web/**/*.tsx"],
   },
   {
     // Feature-folder boundary: features may not import each other's internals.

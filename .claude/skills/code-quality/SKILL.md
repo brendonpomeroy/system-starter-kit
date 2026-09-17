@@ -1,6 +1,6 @@
 ---
 name: code-quality
-description: The quality bar every feature must clear before it is done — TypeScript strict, ESLint + Prettier clean, pragmatic tests (Vitest for API routes and logic, React Testing Library for logic-bearing components, one Playwright smoke test for the critical path), error handling, security basics — with per-codebase specifics for api, web, site and mobile. Called by /build as the quality stage of every feature.
+description: The quality bar every feature must clear before it is done — TypeScript strict, ESLint + Prettier clean, pragmatic tests (Vitest for API routes and logic, React Testing Library for logic-bearing components, one Playwright smoke test for the critical path, an axe accessibility scan, and tests that force loading and error states), error handling, security basics — with per-codebase specifics for api, web, site and mobile. Called by /build as the quality stage of every feature.
 ---
 
 # code-quality — the bar
@@ -36,6 +36,8 @@ Principle: test the things that would embarrass you if they broke, at the cheape
 | Pure logic | Vitest | anything with branches: pricing, permissions, date maths, formatters, reducers | trivial getters |
 | Components | Vitest + React Testing Library (`@testing-library/react`, `jest-dom`) | components with logic: conditional rendering, form validation messages, interaction → callback. Query by role/label (what the user sees). | pure presentational primitives (the style guide is their test); layout |
 | Hooks | RTL `renderHook` with a mocked `hc` client (`msw` if network mocking is cleaner) | loading/success/error states; mutation invalidation | React Query internals |
+| Accessibility | ESLint `jsx-a11y` (in `pnpm lint`); RTL role/label queries; Playwright + `@axe-core/playwright`, `e2e/a11y.spec.ts` | each new screen and its forced states (empty, error, dialog open) scanned; fails on serious/critical not listed in `docs/ACCESSIBILITY.md`. See `.claude/skills/accessibility/SKILL.md` §6 | every page of the site by hand |
+| UX states | RTL + MSW (`delay()`, error handlers) | each async region's loading → data, refetch keeps content, pending submit can't double-send, each error class the feature can hit shows its planned message and recovery (`loading-states` §5, `error-states` §8) | animation timing |
 | Critical path | Playwright (web only), one spec `e2e/smoke.spec.ts` | sign in → reach main screen → perform the single most important core flow from the PRD → sign out. Extend it when a feature *is* on the critical path; otherwise leave it. | everything else |
 | Mobile | Vitest/Jest with `@testing-library/react-native` for hooks and logic only | same as web hooks/logic | UI snapshots; Detox/Maestro unless the owner asks |
 | Site | Astro's `astro check` + a build | links resolve, build succeeds | rendering |
@@ -47,7 +49,7 @@ First-time setup per app happens the first time the feature loop needs it (`pnpm
 ## 3. Error handling
 
 - **API**: one `onError` handler → `{ error: { code, message, details? } }` with the right status. `AppError(code, status, message)` class; throw it from services. Zod errors → 400 with field paths. Unknown errors → 500 with a request id, full error logged, message *not* leaked to the client.
-- **Web/mobile**: every `hc` call goes through `lib/api.ts` which turns non-2xx into a typed `ApiError`. Hooks expose `error`; pages render the design-system error state, never a blank screen. One React error boundary at the shell, one per page. Toast for mutation failures with a retry where it makes sense.
+- **Web/mobile**: every `hc` call goes through `lib/api.ts` which turns non-2xx into a typed `ApiError` carrying the API's `code` (an `ErrorCode` from `@<project>/api-types`). Hooks expose `error`; pages render the design-system error state, never a blank screen. What the user reads and can do for each code comes from `lib/error-messages.ts` and `.claude/skills/error-states/SKILL.md`. One React error boundary at the shell, one per page. Toast for mutation failures with a retry where it makes sense.
 - **Forms**: server validation errors map back onto fields (Zod paths → `setError`).
 - **Never** swallow an error (`catch {}`), and never show the user a stack trace or a raw Postgres message.
 
@@ -85,7 +87,7 @@ These are the builder's rules. The `verify` stage (`.claude/skills/verification/
 ```markdown
 ### F00N — quality
 typecheck ✓ · lint ✓ (0 warnings) · format ✓ · test ✓ (api 6, web 4) · build ✓
-Tests added: routes/projects.test.ts (validation, auth, create), useProjects.test.tsx, smoke extended (create project)
+Tests added: routes/projects.test.ts (validation, auth, create), useProjects.test.tsx (loading, refetch, 500 → retry), a11y.spec.ts (+ projects list, empty, create dialog), smoke extended (create project)
 Security: service key grep clean; RLS policies for projects verified in migration
 Notes: added index on projects(owner_id, created_at)
 ```

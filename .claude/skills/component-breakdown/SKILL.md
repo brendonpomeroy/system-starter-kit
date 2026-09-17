@@ -49,8 +49,9 @@ Rules:
 **Owner-facing:** <two sentences: what they'll be able to do, in their words>
 
 **Screens** (match style guide §Key screens where they exist)
-- /projects — ProjectListPage: table of projects, empty state, "New" button
-- /projects/new — ProjectFormPage
+- /projects — ProjectListPage (top-level): table of projects, empty state, "New" button
+- /projects/new — ProjectFormPage (focused flow, parent /projects; on save replaces itself with /projects/:id)
+- Screen kind (top-level / pushed / focused flow) and parent are required for every web screen; see pwa skill §7
 
 **Components**
 - feature: ProjectTable, ProjectForm, ProjectRow
@@ -58,6 +59,8 @@ Rules:
 - primitive (new — needs design-system skill): none
 
 **Hooks / state** → decided in the next stage (state-management)
+
+**Loading / empty / error / transitions / accessibility** → planned in the ux stage (`.claude/skills/ux/SKILL.md`), which may come back and add to this plan (e.g. undo needs a `deleted_at` column)
 
 **API** (apps/api)
 - GET /projects · POST /projects · GET /projects/:id · PATCH /projects/:id — schemas/projects.ts
@@ -69,7 +72,7 @@ Rules:
 **Mobile** (if applicable): same screens under app/(tabs)/projects, same hooks, native components.
 
 **Out of scope for this feature:** …
-**Tests:** hook happy path + one failure; API route validation + auth; smoke test step if this is the critical path.
+**Tests:** hook happy path + one failure; API route validation + auth; axe scan of the new screens; smoke test step if this is the critical path.
 ```
 
 Show it to the owner. They approve the *owner-facing* part; the rest is for you. Then `/build` moves to `state`.

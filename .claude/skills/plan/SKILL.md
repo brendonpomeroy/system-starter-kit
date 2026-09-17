@@ -28,12 +28,13 @@ Interview rules, all sections:
 3. **Who uses it?** List the kinds of people (e.g. "me", "my three staff", "customers"). For each: how often, on what device (laptop / phone / both), how technical.
 4. **Walk me through the three most important things someone does in it, start to finish.** These become the *core flows*. Push for the minimum: "Is the app useful without this?"
 5. **What does success look like in three months?** A number if possible (users, orders, hours saved).
-6. **What is this app explicitly NOT going to do** in the first version? Write these down — they stop scope creep later.
+6. **What is this app explicitly NOT going to do** in the first version? Write these down — they stop scope creep later. Anything the owner *does* want eventually goes into `docs/BACKLOG.md` → Ideas (backlog skill §7), so saying "not in v1" never feels like losing it.
 7. **Internal tool or MVP for outsiders?** (Doesn't change the architecture, but changes tone, onboarding, and whether a marketing site is needed.)
 8. **Does anyone need to log in?** Who, and do different people see different things (roles)?
-9. **Does it need to work on a phone?** Follow up: on a phone *browser*, or as an *installed app*? Why? (Probe for real native needs: camera, push notifications, offline, background location, Bluetooth, App Store presence as a requirement.)
-10. **Is there an existing brand** — logo, colours, a website, anything it should match?
-11. **Anything it must connect to?** (Stripe, email, Google Sheets, an existing database…)
+9. **Does anyone who'll use it need extra support?** Older users, people with low vision or who use a screen reader, people using it outside in sunlight or one-handed on the job, people less confident with technology. Also: is this for the public, government, education or healthcare, where accessibility laws may apply? Don't make this feel like a compliance quiz. Explain that the app will be built to work for everyone by default (`.claude/skills/accessibility/SKILL.md`), and this just tells us who to pay special attention to.
+10. **Does it need to work on a phone?** Follow up: on a phone *browser*, or as an *installed app*? Why? (Probe for real native needs: camera, push notifications, offline, background location, Bluetooth, App Store presence as a requirement.)
+11. **Is there an existing brand** — logo, colours, a website, anything it should match?
+12. **Anything it must connect to?** (Stripe, email, Google Sheets, an existing database…)
 
 ### Document template
 
@@ -70,6 +71,9 @@ Internal tool | MVP for external users — <one line on what that implies>
 ## Mobile needs
 <"phone browser is fine" | "installed app because <specific native need>" | "unsure — decide in architecture">
 
+## Accessibility
+<"built for everyone to WCAG 2.2 AA (default)" + anyone to pay special attention to, and any legal context the owner mentioned>
+
 ## Brand
 <existing brand assets, or "none — design system will create one">
 
@@ -77,7 +81,7 @@ Internal tool | MVP for external users — <one line on what that implies>
 <list or "none in v1">
 
 ## Added later
-<empty at approval; /build appends features the owner asks for after the PRD>
+<empty at approval; /build adds a line when a backlog feature's breakdown is approved (and rehashes this file)>
 ```
 
 Approval question: **"Does this describe what you want to build?"**

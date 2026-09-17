@@ -1,6 +1,6 @@
 ---
 name: verification
-description: The independent check before anything is called done — verifies the design system is intact and actually used (tokens in sync, style guide matches, lint rules still on, no raw values anywhere), then runs a security audit — every API route authenticated or deliberately public, authorisation and multi-tenant isolation tested with real requests as different users, Supabase RLS checked directly, auth pages and flows (sign-in, sign-up, reset, callback, sign-out) actually working, common vulnerabilities, and unsafe logging of personal data on client and server. Called by /build as the verify stage of every feature (scoped or full) and at the end of scaffold; also when the owner asks for a security check.
+description: The independent check before anything is called done — verifies the design system is intact and actually used (tokens in sync, style guide matches, lint rules still on, no raw values anywhere) and that screens are accessible with every UX state handled (axe, keyboard, screen reader, reduced motion, API down/offline), then runs a security audit — every API route authenticated or deliberately public, authorisation and multi-tenant isolation tested with real requests as different users, Supabase RLS checked directly, auth pages and flows (sign-in, sign-up, reset, callback, sign-out) actually working, common vulnerabilities, and unsafe logging of personal data on client and server. Called by /build as the verify stage of every feature (scoped or full) and at the end of scaffold; also when the owner asks for a security check.
 ---
 
 # verification — check it like someone trying to break it
@@ -13,7 +13,7 @@ description: The independent check before anything is called done — verifies t
 
 | Mode | When | Covers |
 |---|---|---|
-| **scoped** | default for a feature | everything the feature's diff touched, plus the project-wide mechanical scans (§1.1, §2.1, §2.6 greps), which are cheap |
+| **scoped** | default for a feature, a change or a bug fix | everything the feature's diff touched, plus the project-wide mechanical scans (§1.1, §2.1, §2.6 greps), which are cheap |
 | **full** | end of scaffold; before the first production deploy; any feature touching auth, sessions, roles, invitations, tenancy/organisations, RLS policies, storage, payments or webhooks; 5 features since `state.verification.lastFull`; the owner asks ("is it secure?", "run a security check") | every section, whole project |
 
 Say which mode and why in the PROGRESS entry.
@@ -41,6 +41,17 @@ git diff --exit-code packages/design-system/src/generated   # generated files ma
 ### 1.2 Rendered (full mode, or when the feature changed the shell or a primitive)
 
 Run the web app locally and take Playwright screenshots of the sign-in screen, the main authenticated screen and the feature's screens at 375 px and 1280 px (light, and dark if enabled). Compare them with the matching mocks in `docs/style-guide.html`. Check fonts load from the self-hosted package, colours and radii match, the focus ring is visible (tab through), and there's no default browser styling. Save screenshots to `docs/verification/<date>/` and attach the paths to the report.
+
+### 1.3 Accessibility and UX states (full mode, or when the feature added screens)
+
+The builder already ran these in `compliance`. Re-run them independently, following `.claude/skills/accessibility/SKILL.md`:
+
+- `e2e/a11y.spec.ts` (axe) over **every** screen, not just this feature's. Compare against `docs/ACCESSIBILITY.md`: a violation not listed as an owner-accepted exception is a finding.
+- Keyboard-only walk of the PRD's critical path (sign in → main flow → sign out), and a VoiceOver pass of the same. Record where focus goes after each step.
+- Reduced motion: one Playwright run of the smoke test with `reducedMotion: 'reduce'`.
+- UX states on the critical path: with the API stopped, and with the network offline, every screen shows a helpful state (no blank screen, no fake success, input kept). See `ux` Part B.
+
+Severity comes from `accessibility` §8. Accessibility findings the owner has knowingly accepted (recorded in `docs/ACCESSIBILITY.md`) are listed but not counted in `openFindings`. Undecided critical/high ones block `done` like any other finding until fixed or decided.
 
 ## 2. Security audit
 
@@ -168,8 +179,8 @@ pnpm --filter web build && rg -n 'console\.(log|debug|info)' apps/web/dist   # p
 |---|---|---|
 | **critical** | unprotected data route; cross-tenant read or write; RLS off on a table; service-role key in a client bundle; secret in git history; identity taken from the request body | Fix now. Feature can't reach `done`. **Deploy is blocked**. If it's already live, tell the owner immediately in plain language and recommend deploying the fix before anything else. |
 | **high** | missing validator; open redirect; broken auth flow; tokens or whole bodies logged; role escalation | Fix before `done`. Deploy is blocked. |
-| **medium** | PII in log messages; missing rate limit; missing security header; dependency advisory with no reachable path | Fix now if small. Otherwise ask the owner (per `explain-decisions`) whether to fix now or log a follow-up feature `F0NN: security — <thing>`. Deploy allowed. |
-| **low** | hardening, tidy-ups | Log as a follow-up. |
+| **medium** | PII in log messages; missing rate limit; missing security header; dependency advisory with no reachable path | Fix now if small. Otherwise ask the owner (per `explain-decisions`) whether to fix now or add a `security` backlog item in Next (backlog skill). Deploy allowed. |
+| **low** | hardening, tidy-ups | Add a `security` backlog item in Later. |
 
 After fixes, re-run **only the failed checks** plus the matrix test, and record the before and after.
 
@@ -185,6 +196,9 @@ Write `docs/verification/YYYY-MM-DD-<F00N|scaffold|full>.md`:
 
 ## Design system
 tokens in sync ✓ · style guide matches ✓ · lint rules on ✓ · project-wide raw-value scan ✓ · contrast ✓ · screenshots: docs/verification/…/
+
+## Accessibility and UX states
+axe: 0 serious/critical (N accepted exceptions) · keyboard critical path ✓ · VoiceOver ✓ · reduced motion ✓ · API down / offline states ✓
 
 ## Route inventory
 <table from §2.1>

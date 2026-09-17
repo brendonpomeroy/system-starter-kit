@@ -40,8 +40,30 @@
           "status": { "enum": ["started", "completed", "abandoned"] },
           "startedAt": { "type": "string", "format": "date-time" },
           "completedAt": { "type": ["string", "null"], "format": "date-time" },
-          "stage": { "enum": ["breakdown", "state", "build", "quality", "compliance", "verify", "docs", "done", null] },
-          "apps": { "type": "array", "items": { "enum": ["api", "web", "site", "mobile"] } }
+          "stage": { "enum": ["breakdown", "state", "ux", "build", "quality", "compliance", "verify", "docs", "done", null] },
+          "apps": { "type": "array", "items": { "enum": ["api", "web", "site", "mobile"] } },
+          "backlogItem": { "type": ["string", "null"], "pattern": "^I[0-9]{3}$", "description": "docs/BACKLOG.md item this feature came from" },
+          "branch": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "changes": {
+      "type": "array",
+      "description": "small changes run by the /build change track; escalated to a feature when they outgrow its limits",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "status", "startedAt"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^C[0-9]{3}$" },
+          "title": { "type": "string" },
+          "status": { "enum": ["started", "completed", "abandoned", "escalated"] },
+          "startedAt": { "type": "string", "format": "date-time" },
+          "completedAt": { "type": ["string", "null"], "format": "date-time" },
+          "stage": { "enum": ["plan", "build", "quality", "verify", "docs", "done", null] },
+          "apps": { "type": "array", "items": { "enum": ["api", "web", "site", "mobile"] } },
+          "escalatedTo": { "type": ["string", "null"], "pattern": "^F[0-9]{3}$" },
+          "backlogItem": { "type": ["string", "null"], "pattern": "^I[0-9]{3}$" },
+          "branch": { "type": ["string", "null"] }
         }
       }
     },
@@ -61,7 +83,50 @@
           "stage": { "enum": ["intake", "reproduce", "diagnose", "waiting-for-evidence", "fix", "verify", "done", null] },
           "where": { "type": "array", "items": { "enum": ["api", "web", "site", "mobile", "database", "local", "production"] } },
           "rootCause": { "type": ["string", "null"], "description": "one line, filled in once proven" },
-          "notebook": { "type": ["string", "null"], "description": "path under docs/bugs/" }
+          "notebook": { "type": ["string", "null"], "description": "path under docs/bugs/" },
+          "branch": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "deploys": {
+      "type": "array",
+      "description": "production deploys recorded by the release skill, newest last",
+      "items": {
+        "type": "object",
+        "required": ["at", "commit", "items", "status"],
+        "properties": {
+          "at": { "type": "string", "format": "date-time" },
+          "commit": { "type": "string" },
+          "items": { "type": "array", "items": { "type": "string", "pattern": "^([FCB][0-9]{3}|maint-[0-9]{4}-[0-9]{2}-[0-9]{2}|scaffold)$" } },
+          "includesMigration": { "type": "boolean" },
+          "method": { "enum": ["actions", "manual"] },
+          "status": { "enum": ["deploying", "live", "failed", "rolled-back"] },
+          "postDeployCheck": { "enum": ["pending", "passed", "failed", null] },
+          "rolledBackTo": { "type": ["string", "null"], "description": "commit or Worker version ids the rollback restored" },
+          "notes": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "maintenance": {
+      "type": "object",
+      "description": "the maintenance skill's schedule",
+      "properties": {
+        "lastRun": { "type": ["string", "null"], "format": "date-time" },
+        "lastReport": { "type": ["string", "null"], "description": "path under docs/maintenance/" },
+        "lastCommit": { "type": ["string", "null"] },
+        "cadenceDays": { "type": "integer", "minimum": 7, "default": 30 },
+        "deferredUntil": { "type": ["string", "null"], "format": "date" }
+      }
+    },
+    "preferences": {
+      "type": "object",
+      "description": "standing answers from the owner, asked once",
+      "properties": {
+        "push": { "type": ["boolean", "null"], "description": "push work branches to origin; null = not asked yet" },
+        "deploy": {
+          "enum": ["ask", "auto"],
+          "default": "ask",
+          "description": "auto = release finished items without asking (still asks for destructive migrations)"
         }
       }
     },
@@ -85,7 +150,7 @@
     },
     "artifactHashes": {
       "type": "object",
-      "description": "sha256 of each approved artifact at approval time, used to detect upstream edits",
+      "description": "sha256 of docs/PRD.md, docs/ARCHITECTURE.md, docs/DATA-MODEL.md and docs/style-guide.html as last approved or last updated by /build (rehashed in the same commit as any /build edit); used to detect the owner's own edits",
       "additionalProperties": { "type": "string" }
     }
   }
